@@ -1,0 +1,36 @@
+@font-face {
+    font-family: 'Montserrat';
+    src: url('./fonts/Montserrat-Regular.ttf') format('truetype');
+    font-weight: 400;
+    font-style: normal;
+  }
+
+  .skeleton-bg {
+    background: #e0e0e0;
+    height: 40px;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  
+  .skeleton-line {
+    background: #e0e0e0;
+    height: 15px;
+    margin-bottom: 10px;
+    border-radius: 4px;
+    animation: pulse 1.5s infinite ease-in-out;
+  }
+  
+  .skeleton-card {
+    min-height: 200px;
+  }
+  
+  @keyframes pulse {
+    0% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+    100% {
+      opacity: 0.6;
+    }
+  }
