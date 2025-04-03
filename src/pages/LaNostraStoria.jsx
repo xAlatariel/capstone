@@ -15,7 +15,10 @@ const PageHeader = () => {
         animate={inView ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8 }}
         className="display-4 mb-3"
-        style={{ color: "#5D4037" }}
+        style={{ color: "#5D4037",
+          fontFamily: 'Cormorant Garamond, serif',
+                    fontWeight: 500,
+         }}
       >
         La Nostra Storia
       </motion.h1>

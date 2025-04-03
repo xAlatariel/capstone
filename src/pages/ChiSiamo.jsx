@@ -34,10 +34,22 @@ const PageHeader = () => {
         animate={inView ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 0.8 }}
         className="display-4 mb-3"
-        style={{ color: "#5D4037" }}
+        style={{
+          fontFamily: 'Cormorant Garamond, serif',
+                    fontWeight: 500,
+           color: "#5D4037" }}
       >
         Chi Siamo
       </motion.h1>
+      
+      <motion.h2 
+                  variants={itemVariants}
+                  className="fs-1 pb-3" 
+                  style={{
+                    fontFamily: 'Cormorant Garamond, serif',
+                    fontWeight: 500,
+                     color: "#5D4037" }}
+                ></motion.h2>
       <motion.p
         initial={{ opacity: 0, y: 20 }}
         animate={inView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
@@ -152,7 +164,9 @@ const ChiSiamo = () => {
                 }
                 transition={{ duration: 0.8 }}
                 className="text-white p-4"
-                style={{ position: "relative", zIndex: 1 }}
+                style={{ position: "relative", zIndex: 1 
+                  
+                }}
               >
                 <motion.h2
                   initial={{ opacity: 0, y: 20 }}

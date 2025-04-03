@@ -43,7 +43,7 @@ const TextSection = ({ alignment, title, text, additionalText, actionText, actio
       variants={sectionVariants}
       className="position-relative flex-grow-1"
       style={{
-        backgroundColor: "#939480",
+        backgroundColor: "#989985",
         borderTopLeftRadius: isLeft ? '0' : '150px',
         borderBottomLeftRadius: isLeft ? '0' : '150px',
         borderTopRightRadius: isLeft ? '150px' : '0',
@@ -72,7 +72,10 @@ const TextSection = ({ alignment, title, text, additionalText, actionText, actio
           <motion.h2 
             variants={itemVariants}
             className="fs-1 pb-3" 
-            style={{ color: "#5D4037" }}
+            style={{
+              fontFamily: 'Cormorant Garamond, serif',
+              fontWeight: 500,
+               color: "#5D4037" }}
           >
             {title}
           </motion.h2>
@@ -199,7 +202,7 @@ const Home = () => {
         additionalText="Siamo aperti dal martedì alla domenica, a pranzo dalle 12:00 alle 14:30 e a cena dalle 19:00 alle 22:30. Il nostro staff sarà lieto di accogliervi e di farvi vivere un'esperienza gastronomica indimenticabile, all'insegna della tradizione e del buon gusto. Offriamo anche un servizio di catering per eventi speciali e la possibilità di prenotare l'intero locale per cerimonie e occasioni private."
         actionText="Contattaci"
         actionLink="/Contatti"
-      />
+      /> 
 
       {/* Sezione Servizi */}
       <motion.section 
@@ -209,7 +212,7 @@ const Home = () => {
         transition={{ duration: 0.8 }}
         className="py-5 w-100" 
         style={{ 
-          background: "linear-gradient(135deg, #939480 0%, #E6DFD0 100%)"
+          background: "linear-gradient(135deg, #989985 0%, #E6DFD0 100%)"
         }}
         aria-label="I Nostri Servizi"
       >
