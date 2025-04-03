@@ -480,7 +480,10 @@ const LaNostraStoria = () => {
               animate={inViewLegends ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.8 }}
               className="fs-1 mb-3"
-              style={{ color: "#5D4037" }}
+              style={{ color: "#5D4037",
+                fontFamily: 'Cormorant Garamond, serif',
+                    fontWeight: 400,
+               }}
             >
               Leggende della Garfagnana
             </motion.h2>
@@ -545,7 +548,10 @@ const LaNostraStoria = () => {
               animate={inViewTools ? { opacity: 1 } : { opacity: 0 }}
               transition={{ duration: 0.8 }}
               className="fs-1 mb-3"
-              style={{ color: "#5D4037" }}
+              style={{ color: "#5D4037" ,
+                fontFamily: 'Cormorant Garamond, serif',
+                    fontWeight: 500,
+              }}
             >
               Gli Strumenti della Tradizione
             </motion.h2>
