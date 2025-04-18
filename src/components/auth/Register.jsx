@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+import apiService from '../../services/apiService';
+
 const Register = ({ onRegistrationSuccess }) => {
   const [formData, setFormData] = useState({
     nome: '',
@@ -15,17 +17,47 @@ const Register = ({ onRegistrationSuccess }) => {
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
+  const validateName = (name) => name.trim().length >= 2;
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePassword = (password) => password.length >= 8;
+  
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({
       ...formData,
       [name]: value,
     });
+    setError(''); 
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError('');
     setIsLoading(true);
+
+    if (!validateName(formData.nome)) {
+      setError('Il nome deve essere di almeno 2 caratteri');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!validateName(formData.cognome)) {
+      setError('Il cognome deve essere di almeno 2 caratteri');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!validateEmail(formData.email)) {
+      setError('Inserisci un indirizzo email valido');
+      setIsLoading(false);
+      return;
+    }
+
+    if (!validatePassword(formData.password)) {
+      setError('La password deve essere di almeno 8 caratteri');
+      setIsLoading(false);
+      return;
+    }
 
     if (formData.password !== formData.confirmPassword) {
       setError('Le password non coincidono.');
@@ -34,27 +66,16 @@ const Register = ({ onRegistrationSuccess }) => {
     }
 
     try {
-      const response = await fetch('http://localhost:8080/api/users/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          nome: formData.nome,
-          cognome: formData.cognome,
-          email: formData.email,
-          password: formData.password,
-        }),
-        credentials: 'include',
-      });
+      const sanitizedData = {
+        nome: formData.nome.trim(),
+        cognome: formData.cognome.trim(),
+        email: formData.email.trim(),
+        password: formData.password
+      };
 
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(errorText || 'Errore durante la registrazione.');
-      }
-
-      const data = await response.json();
-      console.log('Registrazione avvenuta con successo:', data);
+      const response = await apiService.register(sanitizedData);
+      
+      console.log('Registrazione avvenuta con successo:', response);
       
       if (onRegistrationSuccess) {
         onRegistrationSuccess(formData.email);
@@ -63,7 +84,7 @@ const Register = ({ onRegistrationSuccess }) => {
       }
     } catch (err) {
       console.error('Errore durante la registrazione:', err);
-      setError(err.message);
+      setError(err.message || 'Errore durante la registrazione. Riprova.');
     } finally {
       setIsLoading(false);
     }
@@ -119,7 +140,7 @@ const Register = ({ onRegistrationSuccess }) => {
           {error}
         </motion.div>
       )}
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '5px' }} autoComplete="off">
         <motion.div className="mb-3" variants={itemVariants}>
           <label className="form-label">Nome:</label>
           <motion.input
@@ -131,6 +152,7 @@ const Register = ({ onRegistrationSuccess }) => {
             required
             disabled={isLoading}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="given-name"
           />
         </motion.div>
         <motion.div className="mb-3" variants={itemVariants}>
@@ -144,6 +166,7 @@ const Register = ({ onRegistrationSuccess }) => {
             required
             disabled={isLoading}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="family-name"
           />
         </motion.div>
         <motion.div className="mb-3" variants={itemVariants}>
@@ -157,6 +180,7 @@ const Register = ({ onRegistrationSuccess }) => {
             required
             disabled={isLoading}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="username"
           />
         </motion.div>
         <motion.div className="mb-3" variants={itemVariants}>
@@ -170,7 +194,18 @@ const Register = ({ onRegistrationSuccess }) => {
             required
             disabled={isLoading}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="new-password"
           />
+          {formData.password && !validatePassword(formData.password) && (
+            <motion.div 
+              className="form-text text-danger"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.3 }}
+            >
+              La password deve contenere almeno 8 caratteri
+            </motion.div>
+          )}
         </motion.div>
         <motion.div className="mb-3" variants={itemVariants}>
           <label className="form-label">Conferma Password:</label>
@@ -185,6 +220,7 @@ const Register = ({ onRegistrationSuccess }) => {
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
             style={passwordMismatch ? { borderColor: "red" } : 
                   passwordMatch ? { borderColor: "green" } : {}}
+            autoComplete="new-password"
           />
           {passwordMismatch && (
             <motion.div 

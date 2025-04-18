@@ -3,6 +3,8 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 
+import apiService from '../../services/apiService';
+
 const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => {
   const [formData, setFormData] = useState({ email: prefillEmail, password: '' });
   const [error, setError] = useState(externalError);
@@ -22,38 +24,56 @@ const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => 
     }
   }, [externalError]);
 
+  const isEmailValid = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+  
+  const isPasswordValid = (password) => {
+    return password.length >= 8;
+  };
+
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    setError(''); 
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    if (!formData.email || !formData.password) {
+      setError('Inserisci sia email che password');
+      return;
+    }
+    
+    if (!isEmailValid(formData.email)) {
+      setError('Formato email non valido');
+      return;
+    }
+    
+    if (!isPasswordValid(formData.password)) {
+      setError('La password deve essere di almeno 8 caratteri');
+      return;
+    }
+    
     setIsLoading(true);
     
     try {
-      const response = await fetch('http://localhost:8080/api/users/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+      const response = await apiService.login({
+        email: formData.email.trim(),
+        password: formData.password
       });
-
-      const data = await response.json();
       
-      if (!response.ok) {
-        throw new Error(data.message || 'Credenziali non valide. Riprova.');
-      }
-
-      if (data.data?.token) {
-        const tokenPayload = JSON.parse(atob(data.data.token.split('.')[1]));
+      if (response.status === 'SUCCESS' && response.data?.token) {
+        const tokenPayload = JSON.parse(atob(response.data.token.split('.')[1]));
         
         const userData = {
           email: formData.email,
           role: tokenPayload.role || 'USER'
         };
         
-        login(data.data.token, userData);
+        login(response.data.token, userData);
   
         if (closeModal) {
           closeModal();
@@ -61,10 +81,11 @@ const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => 
         
         navigate('/ReservationPage');
       } else {
-        throw new Error('Token non trovato nella risposta.');
+        throw new Error('Risposta non valida dal server');
       }
     } catch (err) {
-      setError(err.message);
+      console.error('Errore durante il login:', err);
+      setError(err.message || 'Credenziali non valide. Riprova.');
     } finally {
       setIsLoading(false);
     }
@@ -115,7 +136,7 @@ const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => 
           {error}
         </motion.div>
       )}
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <motion.div className="mb-3" variants={itemVariants}>
           <label className="form-label">Email:</label>
           <motion.input
@@ -128,6 +149,7 @@ const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => 
             disabled={isLoading}
             style={{ height: '36px' }}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="username"
           />
         </motion.div>
         <motion.div className="mb-3" variants={itemVariants}>
@@ -141,6 +163,7 @@ const Login = ({ closeModal, prefillEmail = '', error: externalError = '' }) => 
             required
             disabled={isLoading}
             whileFocus={{ boxShadow: "0 0 0 0.25rem rgba(13, 110, 253, 0.25)" }}
+            autoComplete="current-password"
           />
         </motion.div>
         <motion.button 

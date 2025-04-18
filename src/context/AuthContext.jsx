@@ -1,5 +1,7 @@
 import React, { createContext, useState, useContext } from "react";
 
+import apiService from "../services/apiService";
+
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
@@ -15,6 +17,27 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
+  const [loading, setLoading] = useState(true);
+
+  React.useEffect(() => {
+    const checkTokenValidity = () => {
+      if (token && apiService.isTokenExpired()) {
+        logout();
+      }
+      setLoading(false);
+    };
+
+    checkTokenValidity();
+    
+    const intervalId = setInterval(() => {
+      if (token) {
+        checkTokenValidity();
+      }
+    }, 5 * 60 * 1000);
+
+    return () => clearInterval(intervalId);
+  }, [token]);
+
   const isAdmin = user?.role === "ADMIN";
 
   const login = (newToken, userData) => {
@@ -24,13 +47,18 @@ export const AuthProvider = ({ children }) => {
     }
 
     localStorage.setItem("jwtToken", newToken);
+    setToken(newToken);
 
     if (userData) {
-      localStorage.setItem("user", JSON.stringify(userData));
-      setUser(userData);
-    }
 
-    setToken(newToken);
+      const sanitizedUser = {
+        email: userData.email,
+        role: userData.role
+      };
+      
+      localStorage.setItem("user", JSON.stringify(sanitizedUser));
+      setUser(sanitizedUser);
+    }
   };
 
   const logout = () => {
@@ -48,7 +76,18 @@ export const AuthProvider = ({ children }) => {
     logout,
     isAdmin,
     isAuthenticated: !!token,
+    loading
   };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center" style={{ height: "100vh" }}>
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Caricamento...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={contextValue}>{children}</AuthContext.Provider>

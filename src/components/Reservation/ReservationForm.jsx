@@ -1,6 +1,11 @@
 import React, { useState } from "react";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+// ---------------------- INIZIO MODIFICHE SICUREZZA ----------------------
+import { validateReservation } from "../../services/reservationService";
+import apiService from "../../services/apiService";
+import Alert from "../common/Allert";
+// ---------------------- FINE MODIFICHE SICUREZZA ----------------------
 
 const ReservationForm = () => {
   const { token, user } = useAuth();
@@ -18,6 +23,10 @@ const ReservationForm = () => {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
+    // ---------------------- INIZIO MODIFICHE SICUREZZA ----------------------
+    // Reset degli errori quando l'utente modifica i dati
+    setError("");
+    // ---------------------- FINE MODIFICHE SICUREZZA ----------------------
   };
 
   const handleSubmit = async (e) => {
@@ -31,10 +40,14 @@ const ReservationForm = () => {
         throw new Error("Effettua il login per prenotare un tavolo.");
       }
 
-      if (!formData.reservationTime) {
-        throw new Error("Seleziona un orario valido per la prenotazione");
+      // ---------------------- INIZIO MODIFICHE SICUREZZA ----------------------
+      // Validazione dei dati di prenotazione
+      const validationErrors = validateReservation(formData);
+      if (validationErrors.length > 0) {
+        throw new Error(validationErrors.join(". "));
       }
 
+      // Controllo aggiuntivo per verificare che la data/ora selezionata sia futura
       const selectedDate = new Date(formData.reservationDate);
       const timeParts = formData.reservationTime.split(":");
       const selectedDateTime = new Date(
@@ -48,6 +61,7 @@ const ReservationForm = () => {
       if (selectedDateTime < new Date()) {
         throw new Error("Seleziona una data/ora futura");
       }
+      // ---------------------- FINE MODIFICHE SICUREZZA ----------------------
 
       const requestBody = {
         reservationDate: formData.reservationDate,
@@ -59,22 +73,9 @@ const ReservationForm = () => {
 
       console.log("Dati inviati:", JSON.stringify(requestBody, null, 2));
 
-      const response = await fetch("http://localhost:8080/api/reservations", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        if (errorData.message.includes("Capacità")) {
-          throw new Error("Nessun tavolo disponibile per questa data/ora");
-        }
-        throw new Error(errorData.message || "Errore durante la prenotazione.");
-      }
+      // ---------------------- INIZIO MODIFICHE SICUREZZA ----------------------
+      await apiService.createReservation(requestBody);
+      // ---------------------- FINE MODIFICHE SICUREZZA ----------------------
 
       setSuccess(true);
       setTimeout(() => {
@@ -134,10 +135,14 @@ const ReservationForm = () => {
             Prenota un Tavolo
           </h2>
 
-          {error && <div className="alert alert-danger">{error}</div>}
-          {success && (
-            <div className="alert alert-success">Prenotazione confermata!</div>
-          )}
+          {/* ---------------------- INIZIO MODIFICHE SICUREZZA ---------------------- */}
+          <Alert type="danger" message={error} onClose={() => setError("")} />
+
+          <Alert
+            type="success"
+            message={success ? "Prenotazione confermata!" : ""}
+          />
+          {/* ---------------------- FINE MODIFICHE SICUREZZA ---------------------- */}
 
           <form onSubmit={handleSubmit} className="reservation-form">
             <div className="mb-3">
