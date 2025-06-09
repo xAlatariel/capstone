@@ -5,6 +5,7 @@ import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
+import EmailVerificationPage from './pages/EmailVerificationPage';
 import ProtectedRoute from './components/common/ProtectedRoute';
 import ChiSiamo from './pages/ChiSiamo';
 import Contatti from './pages/Contatti';  
@@ -39,16 +40,21 @@ function App() {
             <Navbar />
           </div>
           
-          {/* Contenuto principale  */}
+          {/* Contenuto principale */}
           <div style={{ flex: 1, minHeight: 'calc(100vh - 600px)' }}>
             <Routes>
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/register" element={<RegisterPage />} />
+              
+              {/* NUOVA ROTTA: Verifica Email */}
+              <Route path="/verify-email" element={<EmailVerificationPage />} />
+              
               <Route path='/chiSiamo' element={<ChiSiamo />} />
               <Route path='/contatti' element={<Contatti />} />
-              <Route path='/laNostraStoria' element={<LaNostraStoria />} /> {/* Nuova rotta */}
+              <Route path='/laNostraStoria' element={<LaNostraStoria />} />
               <Route path="/ReservationPage" element={<ReservationPage />} />
+              
               <Route
                 path="/admin"
                 element={

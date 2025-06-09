@@ -1,0 +1,248 @@
+import React, { useState, useEffect } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { Container, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { FaCheckCircle, FaTimesCircle, FaEnvelope } from 'react-icons/fa';
+import apiService from '../services/apiService';
+
+const EmailVerificationPage = () => {
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const [verificationState, setVerificationState] = useState('loading'); // loading, success, error
+  const [message, setMessage] = useState('');
+  const [isResending, setIsResending] = useState(false);
+  const [email, setEmail] = useState('');
+
+  const token = searchParams.get('token');
+
+  useEffect(() => {
+    if (token) {
+      verifyEmail(token);
+    } else {
+      setVerificationState('error');
+      setMessage('Token di verifica mancante. Controlla il link nella tua email.');
+    }
+  }, [token]);
+
+  const verifyEmail = async (verificationToken) => {
+    try {
+      const response = await apiService.verifyEmail(verificationToken);
+      
+      if (response.status === 'SUCCESS') {
+        setVerificationState('success');
+        setMessage('Email verificata con successo! Puoi ora effettuare il login.');
+        
+        // Reindirizza al login dopo 3 secondi
+        setTimeout(() => {
+          navigate('/', { state: { showLogin: true, message: 'Account verificato! Puoi ora accedere.' } });
+        }, 3000);
+      } else {
+        throw new Error(response.data || 'Errore durante la verifica');
+      }
+    } catch (error) {
+      console.error('Errore verifica email:', error);
+      setVerificationState('error');
+      setMessage(error.message || 'Token non valido o scaduto. Richiedi un nuovo link di verifica.');
+    }
+  };
+
+  const handleResendEmail = async () => {
+    if (!email.trim()) {
+      alert('Inserisci la tua email per richiedere un nuovo link di verifica');
+      return;
+    }
+
+    setIsResending(true);
+    try {
+      await apiService.resendVerificationEmail(email);
+      alert('Nuovo link di verifica inviato! Controlla la tua email.');
+    } catch (error) {
+      console.error('Errore reinvio email:', error);
+      alert('Errore durante l\'invio. Riprova più tardi.');
+    } finally {
+      setIsResending(false);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.5 }
+    }
+  };
+
+  const iconVariants = {
+    hidden: { scale: 0 },
+    visible: { 
+      scale: 1,
+      transition: { 
+        type: "spring",
+        stiffness: 200,
+        delay: 0.2
+      }
+    }
+  };
+
+  return (
+    <Container 
+      className="d-flex justify-content-center align-items-center"
+      style={{ minHeight: '70vh', paddingTop: '100px' }}
+    >
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants}
+        style={{ width: '100%', maxWidth: '500px' }}
+      >
+        <Card className="shadow-lg border-0">
+          <Card.Body className="text-center p-5">
+            {verificationState === 'loading' && (
+              <>
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ duration: 0.5 }}
+                >
+                  <Spinner 
+                    animation="border" 
+                    variant="primary" 
+                    style={{ width: '4rem', height: '4rem', marginBottom: '20px' }}
+                  />
+                </motion.div>
+                <h3 className="mb-3" style={{ color: '#5D4037' }}>
+                  Verifica in corso...
+                </h3>
+                <p className="text-muted">
+                  Stiamo verificando il tuo account. Attendere prego.
+                </p>
+              </>
+            )}
+
+            {verificationState === 'success' && (
+              <>
+                <motion.div
+                  variants={iconVariants}
+                  className="mb-4"
+                >
+                  <FaCheckCircle 
+                    size={80} 
+                    style={{ color: '#28a745' }}
+                  />
+                </motion.div>
+                <motion.h3 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-3"
+                  style={{ color: '#28a745' }}
+                >
+                  ✅ Verifica Completata!
+                </motion.h3>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Alert variant="success" className="mb-4">
+                    {message}
+                  </Alert>
+                  <p className="text-muted mb-4">
+                    Sarai reindirizzato alla pagina di login tra pochi secondi...
+                  </p>
+                  <Button
+                    variant="success"
+                    onClick={() => navigate('/', { state: { showLogin: true } })}
+                    className="px-4"
+                  >
+                    Vai al Login
+                  </Button>
+                </motion.div>
+              </>
+            )}
+
+            {verificationState === 'error' && (
+              <>
+                <motion.div
+                  variants={iconVariants}
+                  className="mb-4"
+                >
+                  <FaTimesCircle 
+                    size={80} 
+                    style={{ color: '#dc3545' }}
+                  />
+                </motion.div>
+                <motion.h3 
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.3 }}
+                  className="mb-3"
+                  style={{ color: '#dc3545' }}
+                >
+                  ❌ Verifica Fallita
+                </motion.h3>
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.4 }}
+                >
+                  <Alert variant="danger" className="mb-4">
+                    {message}
+                  </Alert>
+                  
+                  <div className="border-top pt-4">
+                    <h5 className="mb-3">
+                      <FaEnvelope className="me-2" />
+                      Richiedi Nuovo Link
+                    </h5>
+                    <div className="d-flex gap-2">
+                      <input
+                        type="email"
+                        className="form-control"
+                        placeholder="La tua email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={isResending}
+                      />
+                      <Button
+                        variant="primary"
+                        onClick={handleResendEmail}
+                        disabled={isResending || !email.trim()}
+                        style={{ whiteSpace: 'nowrap' }}
+                      >
+                        {isResending ? (
+                          <>
+                            <Spinner animation="border" size="sm" className="me-2" />
+                            Invio...
+                          </>
+                        ) : (
+                          'Invia'
+                        )}
+                      </Button>
+                    </div>
+                    <small className="text-muted d-block mt-2">
+                      Inserisci la tua email per ricevere un nuovo link di verifica
+                    </small>
+                  </div>
+
+                  <div className="mt-4">
+                    <Button
+                      variant="outline-secondary"
+                      onClick={() => navigate('/')}
+                      className="me-2"
+                    >
+                      Torna alla Home
+                    </Button>
+                  </div>
+                </motion.div>
+              </>
+            )}
+          </Card.Body>
+        </Card>
+      </motion.div>
+    </Container>
+  );
+};
+
+export default EmailVerificationPage;

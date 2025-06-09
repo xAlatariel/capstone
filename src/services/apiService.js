@@ -1,9 +1,8 @@
-
 const API_BASE_URL = 'http://localhost:8080/api';
 
 class ApiService {
 
-    getHeaders(contentType = 'application/json') {
+  getHeaders(contentType = 'application/json') {
     const headers = {
       'Content-Type': contentType,
     };
@@ -21,10 +20,8 @@ class ApiService {
     if (!token) return true;
     
     try {
-
-        const payload = JSON.parse(atob(token.split('.')[1]));
-
-        return payload.exp * 1000 < Date.now();
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      return payload.exp * 1000 < Date.now();
     } catch (e) {
       console.error('Errore nella verifica del token:', e);
       return true;
@@ -33,8 +30,7 @@ class ApiService {
 
   async fetchWithAuth(endpoint, options = {}) {
     if (this.isTokenExpired() && endpoint !== '/users/login' && endpoint !== '/users/register') {
-
-        this.handleAuthError();
+      this.handleAuthError();
       throw new Error('Sessione scaduta. Effettua di nuovo il login.');
     }
 
@@ -76,6 +72,9 @@ class ApiService {
     window.location.href = '/';
   }
 
+  // ===================================================================
+  // AUTENTICAZIONE
+  // ===================================================================
   async login(credentials) {
     const response = await this.fetchWithAuth('/users/login', {
       method: 'POST',
@@ -94,6 +93,48 @@ class ApiService {
     return response;
   }
 
+  // ===================================================================
+  // VERIFICA EMAIL
+  // ===================================================================
+  async verifyEmail(token) {
+    const response = await this.fetchWithAuth('/users/verify-email', {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ token })
+    });
+    return response;
+  }
+
+  async resendVerificationEmail(email) {
+    const response = await this.fetchWithAuth('/users/resend-verification', {
+      method: 'POST',
+      headers: this.getHeaders(),
+      body: JSON.stringify({ email })
+    });
+    return response;
+  }
+
+  async getAccountStatus(email) {
+    return await this.fetchWithAuth(`/users/account-status?email=${encodeURIComponent(email)}`);
+  }
+
+  // ===================================================================
+  // GESTIONE UTENTE
+  // ===================================================================
+  async getUserById(id) {
+    return await this.fetchWithAuth(`/users/${id}`);
+  }
+
+  async changePassword(id, newPassword) {
+    return await this.fetchWithAuth(`/users/${id}/change-password`, {
+      method: 'POST',
+      body: JSON.stringify({ newPassword })
+    });
+  }
+
+  // ===================================================================
+  // PRENOTAZIONI
+  // ===================================================================
   async createReservation(reservationData) {
     const response = await this.fetchWithAuth('/reservations', {
       method: 'POST',
@@ -110,6 +151,14 @@ class ApiService {
     return await this.fetchWithAuth(`/reservations/date/${date}`);
   }
 
+  async getAllReservations() {
+    return await this.fetchWithAuth('/reservations');
+  }
+
+  async getReservationById(id) {
+    return await this.fetchWithAuth(`/reservations/${id}`);
+  }
+
   async updateReservation(id, reservationData) {
     return await this.fetchWithAuth(`/reservations/${id}`, {
       method: 'PUT',
@@ -121,6 +170,43 @@ class ApiService {
     return await this.fetchWithAuth(`/reservations/${id}`, {
       method: 'DELETE'
     });
+  }
+
+  // ===================================================================
+  // UTILITY METHODS
+  // ===================================================================
+  
+  // Validazione email
+  validateEmail(email) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  }
+
+  // Sanitizzazione input
+  sanitizeInput(input) {
+    if (typeof input !== 'string') return input;
+    return input.trim().replace(/[<>]/g, '');
+  }
+
+  // Gestione errori specifici
+  getErrorMessage(error) {
+    if (error.message) return error.message;
+    if (typeof error === 'string') return error;
+    return 'Si è verificato un errore. Riprova più tardi.';
+  }
+
+  // Check connessione
+  async checkConnection() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/health`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      return response.ok;
+    } catch (error) {
+      console.error('Connessione al server non disponibile:', error);
+      return false;
+    }
   }
 }
 
