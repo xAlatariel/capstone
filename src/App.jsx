@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { ToastProvider } from './components/common/ToastProvider';
 import Navbar from './components/Navbar';
 import Home from './pages/Home';
 import LoginPage from './pages/LoginPage';
@@ -13,7 +14,9 @@ import Header from './components/Header';
 import ReservationPage from './pages/ReservationPage';
 import AdminPage from './pages/AdminPage';
 import UserReservationsPage from './pages/UserReservationPage';
-import LaNostraStoria from './pages/LaNostraStoria'; 
+import LaNostraStoria from './pages/LaNostraStoria';
+import NotFoundPage from './pages/NotFoundPage';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 function App() {
   return (
@@ -25,56 +28,63 @@ function App() {
       display: 'flex',
       flexDirection: 'column'
     }}>
-      <AuthProvider>
-        <Router>
-          <Header />
-          <div 
-            className="d-flex justify-content-center align-items-center"
-            style={{
-              backgroundImage: 'url(/src/assets/foto/fotoristorante3.jpeg)',
-              backgroundSize: 'cover',
-              backgroundPosition: 'center',
-              height: '500px'
-            }}
-          >
-            <Navbar />
-          </div>
-          
-          {/* Contenuto principale */}
-          <div style={{ flex: 1, minHeight: 'calc(100vh - 600px)' }}>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/login" element={<LoginPage />} />
-              <Route path="/register" element={<RegisterPage />} />
+      <ErrorBoundary>
+        <ToastProvider>
+          <AuthProvider>
+            <Router>
+              <Header />
+              <div 
+                className="d-flex justify-content-center align-items-center"
+                style={{
+                  backgroundImage: 'url(/src/assets/foto/fotoristorante3.jpeg)',
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                  height: '500px'
+                }}
+              >
+                <Navbar />
+              </div>
               
-              {/* NUOVA ROTTA: Verifica Email */}
-              <Route path="/verify-email" element={<EmailVerificationPage />} />
-              
-              <Route path='/chiSiamo' element={<ChiSiamo />} />
-              <Route path='/contatti' element={<Contatti />} />
-              <Route path='/laNostraStoria' element={<LaNostraStoria />} />
-              <Route path="/ReservationPage" element={<ReservationPage />} />
-              
-              <Route
-                path="/admin"
-                element={
-                  <ProtectedRoute requiredRole="ADMIN">
-                    <AdminPage />
-                  </ProtectedRoute>
-                }
-              /> 
-              <Route
-                path="/user/reservations"
-                element={
-                  <ProtectedRoute>
-                    <UserReservationsPage />
-                  </ProtectedRoute>
-                }
-              />
-            </Routes>
-          </div>
-        </Router>
-      </AuthProvider>
+              {/* Contenuto principale */}
+              <div style={{ flex: 1, minHeight: 'calc(100vh - 600px)' }}>
+                <Routes>
+                  <Route path="/" element={<Home />} />
+                  <Route path="/login" element={<LoginPage />} />
+                  <Route path="/register" element={<RegisterPage />} />
+                  
+                  {/* NUOVA ROTTA: Verifica Email */}
+                  <Route path="/verify-email" element={<EmailVerificationPage />} />
+                  
+                  <Route path='/chiSiamo' element={<ChiSiamo />} />
+                  <Route path='/contatti' element={<Contatti />} />
+                  <Route path='/laNostraStoria' element={<LaNostraStoria />} />
+                  <Route path="/ReservationPage" element={<ReservationPage />} />
+                  
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <AdminPage />
+                      </ProtectedRoute>
+                    }
+                  /> 
+                  <Route
+                    path="/user/reservations"
+                    element={
+                      <ProtectedRoute>
+                        <UserReservationsPage />
+                      </ProtectedRoute>
+                    }
+                  />
+                  
+                  {/* Fallback per pagine non trovate */}
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </div>
+            </Router>
+          </AuthProvider>
+        </ToastProvider>
+      </ErrorBoundary>
     </div>
   );
 }
