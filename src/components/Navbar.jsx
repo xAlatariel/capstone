@@ -14,6 +14,8 @@ import { useAuth } from "../context/AuthContext";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
 import { motion, AnimatePresence } from "framer-motion";
+import Menu from '../pages/Menu';
+
 
 const NavbarComponent = () => {
   const [showModal, setShowModal] = useState(false);
@@ -103,6 +105,16 @@ const NavbarComponent = () => {
                 >
                   <Nav.Link as={Link} to="/laNostraStoria">
                     La Nostra Storia
+                  </Nav.Link>
+                </motion.div>
+              </div>
+              <div className="mx-2 position-relative">
+                <motion.div
+                  whileHover={{ y: -2 }}
+                  style={isActive("/menu") ? activeStyle : {}}
+                >
+                  <Nav.Link as={Link} to="/menu">
+                    Menu
                   </Nav.Link>
                 </motion.div>
               </div>

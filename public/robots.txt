@@ -1,0 +1,21 @@
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://www.aicanipai.it/sitemap.xml
+
+# Disallow admin areas
+Disallow: /admin/
+Disallow: /api/
+Disallow: /user/reservations/
+
+# Allow important pages
+Allow: /
+Allow: /menu
+Allow: /chiSiamo
+Allow: /laNostraStoria
+Allow: /contatti
+Allow: /ReservationPage
+
+# Crawl delay
+Crawl-delay: 1

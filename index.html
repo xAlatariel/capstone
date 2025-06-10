@@ -1,14 +1,93 @@
 <!doctype html>
-<html lang="en">
+<html lang="it">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="src/assets/foto/logo_canepai.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Ai Canipai</title>
+    
+    <!-- SEO Meta Tags -->
+    <title>Ristorante Ai Canipai - Cucina Toscana Tradizionale | San Romano in Garfagnana</title>
+    <meta name="description" content="Ristorante Ai Canipai a San Romano in Garfagnana: cucina toscana autentica, pasta fresca fatta in casa, ingredienti locali. Prenota il tuo tavolo online." />
+    <meta name="keywords" content="ristorante, toscana, garfagnana, san romano, cucina tradizionale, pasta fresca, ingredienti locali, prenotazione online" />
+    <meta name="author" content="Ristorante Ai Canipai" />
+    <meta name="robots" content="index, follow" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://www.aicanipai.it/" />
+    <meta property="og:title" content="Ristorante Ai Canipai - Cucina Toscana Tradizionale" />
+    <meta property="og:description" content="Scopri i sapori autentici della Garfagnana nel nostro ristorante. Pasta fresca, ingredienti locali e tradizione culinaria toscana." />
+    <meta property="og:image" content="https://www.aicanipai.it/og-image.jpg" />
+    <meta property="og:site_name" content="Ristorante Ai Canipai" />
+    <meta property="og:locale" content="it_IT" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://www.aicanipai.it/" />
+    <meta property="twitter:title" content="Ristorante Ai Canipai - Cucina Toscana Tradizionale" />
+    <meta property="twitter:description" content="Scopri i sapori autentici della Garfagnana nel nostro ristorante. Pasta fresca, ingredienti locali e tradizione culinaria toscana." />
+    <meta property="twitter:image" content="https://www.aicanipai.it/og-image.jpg" />
+    
+    <!-- Local Business Schema -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Restaurant",
+      "name": "Ristorante Ai Canipai",
+      "description": "Ristorante di cucina toscana tradizionale a San Romano in Garfagnana",
+      "url": "https://www.aicanipai.it",
+      "telephone": "+39-0583-179-9307",
+      "email": "info@aicanipai.it",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Via Roma, 22",
+        "addressLocality": "San Romano in Garfagnana",
+        "addressRegion": "Tuscany",
+        "postalCode": "55038",
+        "addressCountry": "IT"
+      },
+      "geo": {
+        "@type": "GeoCoordinates",
+        "latitude": "44.0781",
+        "longitude": "10.4847"
+      },
+      "openingHours": [
+        "Tu-Su 12:00-15:00",
+        "Tu-Su 19:00-23:00"
+      ],
+      "servesCuisine": "Italian",
+      "priceRange": "$$",
+      "acceptsReservations": true,
+      "hasMenu": "https://www.aicanipai.it/menu",
+      "sameAs": [
+        "https://facebook.com/aicanipai",
+        "https://instagram.com/aicanipai"
+      ]
+    }
+    </script>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://www.aicanipai.it/" />
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Montserrat:wght@300;400;500;600;700&display=swap" as="style" onload="this.onload=null;this.rel='stylesheet'" />
+    
+    <!-- Performance hints -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    
+    <!-- Theme color -->
+    <meta name="theme-color" content="#5D4037" />
+    <meta name="msapplication-TileColor" content="#5D4037" />
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
-
 </html>

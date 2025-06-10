@@ -1,3 +1,5 @@
+// SOSTITUZIONE COMPLETA per src/App.jsx
+
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
@@ -15,8 +17,12 @@ import ReservationPage from './pages/ReservationPage';
 import AdminPage from './pages/AdminPage';
 import UserReservationsPage from './pages/UserReservationPage';
 import LaNostraStoria from './pages/LaNostraStoria';
+import Menu from './pages/Menu'; // NUOVO IMPORT
+import PrivacyPolicy from './pages/PrivacyPolicy'; // NUOVO IMPORT
+import CookiePolicy from './pages/CookiePolicy'; // NUOVO IMPORT
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import Footer from './components/Footer'; // NUOVO IMPORT
 
 function App() {
   return (
@@ -58,6 +64,9 @@ function App() {
                   <Route path='/chiSiamo' element={<ChiSiamo />} />
                   <Route path='/contatti' element={<Contatti />} />
                   <Route path='/laNostraStoria' element={<LaNostraStoria />} />
+                  <Route path="/menu" element={<Menu />} /> {/* NUOVA ROTTA MENU */}
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* PRIVACY POLICY */}
+                  <Route path="/cookie-policy" element={<CookiePolicy />} /> {/* COOKIE POLICY */}
                   <Route path="/ReservationPage" element={<ReservationPage />} />
                   
                   <Route
@@ -81,6 +90,9 @@ function App() {
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
+              
+              {/* NUOVO FOOTER */}
+              <Footer />
             </Router>
           </AuthProvider>
         </ToastProvider>
