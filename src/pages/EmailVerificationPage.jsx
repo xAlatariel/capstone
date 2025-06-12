@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Container, Card, Spinner, Alert, Button } from 'react-bootstrap';
+import { Container, Card, Spinner, Alert, Button, Form } from 'react-bootstrap';
 import { FaCheckCircle, FaTimesCircle, FaEnvelope } from 'react-icons/fa';
 import apiService from '../services/apiService';
 
@@ -26,7 +26,10 @@ const EmailVerificationPage = () => {
 
   const verifyEmail = async (verificationToken) => {
     try {
+      console.log('Verifica token:', verificationToken);
       const response = await apiService.verifyEmail(verificationToken);
+      
+      console.log('Risposta verifica:', response);
       
       if (response.status === 'SUCCESS') {
         setVerificationState('success');
@@ -37,7 +40,7 @@ const EmailVerificationPage = () => {
           navigate('/', { state: { showLogin: true, message: 'Account verificato! Puoi ora accedere.' } });
         }, 3000);
       } else {
-        throw new Error(response.data || 'Errore durante la verifica');
+        throw new Error(response.message || 'Errore durante la verifica');
       }
     } catch (error) {
       console.error('Errore verifica email:', error);
@@ -56,6 +59,7 @@ const EmailVerificationPage = () => {
     try {
       await apiService.resendVerificationEmail(email);
       alert('Nuovo link di verifica inviato! Controlla la tua email.');
+      setEmail('');
     } catch (error) {
       console.error('Errore reinvio email:', error);
       alert('Errore durante l\'invio. Riprova più tardi.');
@@ -140,25 +144,19 @@ const EmailVerificationPage = () => {
                 >
                   ✅ Verifica Completata!
                 </motion.h3>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
+                <Alert variant="success" className="mb-4">
+                  {message}
+                </Alert>
+                <p className="text-muted">
+                  Sarai reindirizzato alla pagina di login tra pochi secondi...
+                </p>
+                <Button 
+                  variant="outline-success"
+                  onClick={() => navigate('/', { state: { showLogin: true } })}
+                  className="mt-3"
                 >
-                  <Alert variant="success" className="mb-4">
-                    {message}
-                  </Alert>
-                  <p className="text-muted mb-4">
-                    Sarai reindirizzato alla pagina di login tra pochi secondi...
-                  </p>
-                  <Button
-                    variant="success"
-                    onClick={() => navigate('/', { state: { showLogin: true } })}
-                    className="px-4"
-                  >
-                    Vai al Login
-                  </Button>
-                </motion.div>
+                  Vai al Login
+                </Button>
               </>
             )}
 
@@ -173,69 +171,61 @@ const EmailVerificationPage = () => {
                     style={{ color: '#dc3545' }}
                   />
                 </motion.div>
-                <motion.h3 
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.3 }}
-                  className="mb-3"
-                  style={{ color: '#dc3545' }}
-                >
+                <h3 className="mb-3" style={{ color: '#dc3545' }}>
                   ❌ Verifica Fallita
-                </motion.h3>
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4 }}
-                >
-                  <Alert variant="danger" className="mb-4">
-                    {message}
-                  </Alert>
-                  
-                  <div className="border-top pt-4">
+                </h3>
+                <Alert variant="danger" className="mb-4">
+                  {message}
+                </Alert>
+                
+                <Card className="bg-light">
+                  <Card.Body>
                     <h5 className="mb-3">
                       <FaEnvelope className="me-2" />
-                      Richiedi Nuovo Link
+                      Richiedi nuovo link
                     </h5>
-                    <div className="d-flex gap-2">
-                      <input
-                        type="email"
-                        className="form-control"
-                        placeholder="La tua email"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={isResending}
-                      />
-                      <Button
+                    <Form onSubmit={(e) => { e.preventDefault(); handleResendEmail(); }}>
+                      <Form.Group className="mb-3">
+                        <Form.Control
+                          type="email"
+                          placeholder="Inserisci la tua email"
+                          value={email}
+                          onChange={(e) => setEmail(e.target.value)}
+                          required
+                        />
+                      </Form.Group>
+                      <Button 
+                        type="submit"
                         variant="primary"
-                        onClick={handleResendEmail}
-                        disabled={isResending || !email.trim()}
-                        style={{ whiteSpace: 'nowrap' }}
+                        disabled={isResending}
+                        className="w-100"
                       >
                         {isResending ? (
                           <>
-                            <Spinner animation="border" size="sm" className="me-2" />
-                            Invio...
+                            <Spinner
+                              as="span"
+                              animation="border"
+                              size="sm"
+                              role="status"
+                              className="me-2"
+                            />
+                            Invio in corso...
                           </>
                         ) : (
-                          'Invia'
+                          'Invia nuovo link'
                         )}
                       </Button>
-                    </div>
-                    <small className="text-muted d-block mt-2">
-                      Inserisci la tua email per ricevere un nuovo link di verifica
-                    </small>
-                  </div>
-
-                  <div className="mt-4">
-                    <Button
-                      variant="outline-secondary"
-                      onClick={() => navigate('/')}
-                      className="me-2"
-                    >
-                      Torna alla Home
-                    </Button>
-                  </div>
-                </motion.div>
+                    </Form>
+                  </Card.Body>
+                </Card>
+                
+                <Button 
+                  variant="outline-secondary"
+                  onClick={() => navigate('/')}
+                  className="mt-3"
+                >
+                  Torna alla Home
+                </Button>
               </>
             )}
           </Card.Body>

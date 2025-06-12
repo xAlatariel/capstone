@@ -59,8 +59,7 @@ function App() {
                   <Route path="/register" element={<RegisterPage />} />
                   
                   {/* NUOVA ROTTA: Verifica Email */}
-                  <Route path="/verify-email" element={<EmailVerificationPage />} />
-                  
+<Route path="/verify-email" element={<EmailVerificationPage />} />                  
                   <Route path='/chiSiamo' element={<ChiSiamo />} />
                   <Route path='/contatti' element={<Contatti />} />
                   <Route path='/laNostraStoria' element={<LaNostraStoria />} />

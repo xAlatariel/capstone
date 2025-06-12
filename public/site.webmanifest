@@ -1,6 +1,7 @@
 {
   "name": "Ristorante Ai Canipai",
   "short_name": "Ai Canipai",
+  "description": "Ristorante tradizionale toscano a San Romano in Garfagnana",
   "icons": [
     {
       "src": "/favicon.ico",
@@ -10,5 +11,7 @@
   ],
   "theme_color": "#5D4037",
   "background_color": "#F0EBDE",
-  "display": "standalone"
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/"
 }
