@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaExclamationTriangle, FaHome, FaRefresh } from 'react-icons/fa';
+import { FaExclamationTriangle, FaHome, FaSyncAlt } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
 
 class ErrorBoundary extends React.Component {
@@ -91,7 +91,7 @@ class ErrorBoundary extends React.Component {
                 onClick={this.handleRetry}
                 className="inline-flex items-center px-6 py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors"
               >
-                <FaRefresh className="mr-2" />
+<FaSyncAlt className="mr-2" />
                 Riprova
               </motion.button>
 

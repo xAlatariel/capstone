@@ -1,0 +1,14 @@
+{
+  "name": "Ristorante Ai Canipai",
+  "short_name": "Ai Canipai",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "theme_color": "#5D4037",
+  "background_color": "#F0EBDE",
+  "display": "standalone"
+}

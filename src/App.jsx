@@ -87,7 +87,7 @@ function App() {
                   />
                   
                   {/* Fallback per pagine non trovate */}
-                  <Route path="*" element={<NotFoundPage />} />
+               <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
               
