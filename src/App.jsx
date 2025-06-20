@@ -17,12 +17,11 @@ import ReservationPage from './pages/ReservationPage';
 import AdminPage from './pages/AdminPage';
 import UserReservationsPage from './pages/UserReservationPage';
 import LaNostraStoria from './pages/LaNostraStoria';
-import Menu from './pages/Menu'; // NUOVO IMPORT
-import PrivacyPolicy from './pages/PrivacyPolicy'; // NUOVO IMPORT
-import CookiePolicy from './pages/CookiePolicy'; // NUOVO IMPORT
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import CookiePolicy from './pages/CookiePolicy';
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
-import Footer from './components/Footer'; // NUOVO IMPORT
+import Footer from './components/Footer';
 import MenuDisplay from './components/Menu/MenuDisplay';
 import MenuManagement from './components/Admin/MenuManagement';
 
@@ -59,19 +58,19 @@ function App() {
                   <Route path="/" element={<Home />} />
                   <Route path="/login" element={<LoginPage />} />
                   <Route path="/register" element={<RegisterPage />} />
-                  
-                  {/* NUOVA ROTTA: Verifica Email */}
-<Route path="/verify-email" element={<EmailVerificationPage />} />                  
+                  <Route path="/verify-email" element={<EmailVerificationPage />} />                  
                   <Route path='/chiSiamo' element={<ChiSiamo />} />
                   <Route path='/contatti' element={<Contatti />} />
                   <Route path='/laNostraStoria' element={<LaNostraStoria />} />
-                  <Route path="/menu" element={<Menu />} /> {/* NUOVA ROTTA MENU */}
-                  <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* PRIVACY POLICY */}
-                  <Route path="/cookie-policy" element={<CookiePolicy />} /> {/* COOKIE POLICY */}
+                  
+                  {/* MENU DINAMICO - USA SOLO MenuDisplay */}
+                  <Route path="/menu" element={<MenuDisplay />} />
+                  
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                  <Route path="/cookie-policy" element={<CookiePolicy />} />
                   <Route path="/ReservationPage" element={<ReservationPage />} />
-                    <Route path="/menu" element={<MenuDisplay />} />
 
-
+                  {/* ADMIN ROUTES */}
                   <Route
                     path="/admin"
                     element={
@@ -80,15 +79,17 @@ function App() {
                       </ProtectedRoute>
                     }
                   /> 
-                    <Route
-    path="/admin/menu"
-    element={
-      <ProtectedRoute requiredRole="ADMIN">
-        <MenuManagement />
-      </ProtectedRoute>
-    }
-  />
+                  
+                  <Route
+                    path="/admin/menu"
+                    element={
+                      <ProtectedRoute requiredRole="ADMIN">
+                        <MenuManagement />
+                      </ProtectedRoute>
+                    }
+                  />
 
+                  {/* USER ROUTES */}
                   <Route
                     path="/user/reservations"
                     element={
@@ -99,11 +100,10 @@ function App() {
                   />
                   
                   {/* Fallback per pagine non trovate */}
-               <Route path="*" element={<NotFoundPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
               
-              {/* NUOVO FOOTER */}
               <Footer />
             </Router>
           </AuthProvider>
