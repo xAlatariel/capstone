@@ -1,3 +1,7 @@
+// =================================================================
+// SOSTITUZIONE COMPLETA per src/services/menuService.js
+// =================================================================
+
 import apiService from './apiService';
 
 class MenuService {
@@ -7,7 +11,7 @@ class MenuService {
   // ===================================================================
   
   /**
-   * Recupera tutti i menu attivi
+   * Recupera tutti i menu attivi per la visualizzazione pubblica
    */
   async getAllActiveMenus() {
     try {
@@ -28,7 +32,7 @@ class MenuService {
       return response.data;
     } catch (error) {
       console.error('Errore recupero menu del giorno:', error);
-      if (error.message.includes('404')) {
+      if (error.status === 404) {
         throw new Error('Nessun menu del giorno disponibile per oggi.');
       }
       throw new Error('Impossibile recuperare il menu del giorno.');
@@ -44,16 +48,61 @@ class MenuService {
       return response.data;
     } catch (error) {
       console.error('Errore recupero menu stagionale:', error);
-      if (error.message.includes('404')) {
+      if (error.status === 404) {
         throw new Error('Nessun menu stagionale disponibile.');
       }
       throw new Error('Impossibile recuperare il menu stagionale.');
     }
   }
 
+  /**
+   * Recupera un menu specifico per data (per menu del giorno)
+   */
+  async getDailyMenuByDate(date) {
+    try {
+      const response = await apiService.fetchWithAuth(`/menus/daily/date/${date}`);
+      return response.data;
+    } catch (error) {
+      console.error('Errore recupero menu per data:', error);
+      if (error.status === 404) {
+        throw new Error('Nessun menu disponibile per la data selezionata.');
+      }
+      throw new Error('Impossibile recuperare il menu per la data specificata.');
+    }
+  }
+
   // ===================================================================
-  // METODI ADMIN
+  // METODI ADMIN - GESTIONE COMPLETA
   // ===================================================================
+
+  /**
+   * Recupera tutti i menu (solo admin)
+   */
+  async getAllMenus() {
+    try {
+      const response = await apiService.fetchWithAuth('/admin/menus');
+      return response.data || [];
+    } catch (error) {
+      console.error('Errore recupero tutti i menu:', error);
+      throw new Error('Impossibile recuperare i menu. Verifica i permessi.');
+    }
+  }
+
+  /**
+   * Recupera un menu specifico per ID (solo admin)
+   */
+  async getMenuById(id) {
+    try {
+      const response = await apiService.fetchWithAuth(`/admin/menus/${id}`);
+      return response.data;
+    } catch (error) {
+      console.error('Errore recupero menu per ID:', error);
+      if (error.status === 404) {
+        throw new Error('Menu non trovato.');
+      }
+      throw new Error('Impossibile recuperare il menu specificato.');
+    }
+  }
 
   /**
    * Crea un nuovo menu (solo admin)
@@ -61,7 +110,7 @@ class MenuService {
   async createMenu(menuData) {
     try {
       this.validateMenuData(menuData);
-      const response = await apiService.fetchWithAuth('/menus', {
+      const response = await apiService.fetchWithAuth('/admin/menus', {
         method: 'POST',
         body: JSON.stringify(menuData)
       });
@@ -78,7 +127,7 @@ class MenuService {
   async updateMenu(id, menuData) {
     try {
       this.validateMenuData(menuData);
-      const response = await apiService.fetchWithAuth(`/menus/${id}`, {
+      const response = await apiService.fetchWithAuth(`/admin/menus/${id}`, {
         method: 'PUT',
         body: JSON.stringify(menuData)
       });
@@ -94,7 +143,7 @@ class MenuService {
    */
   async deleteMenu(id) {
     try {
-      await apiService.fetchWithAuth(`/menus/${id}`, {
+      await apiService.fetchWithAuth(`/admin/menus/${id}`, {
         method: 'DELETE'
       });
       return true;
@@ -105,15 +154,33 @@ class MenuService {
   }
 
   /**
-   * Recupera un menu specifico per ID (solo admin)
+   * Attiva/Disattiva un menu (solo admin)
    */
-  async getMenuById(id) {
+  async toggleMenuStatus(id, isActive) {
     try {
-      const response = await apiService.fetchWithAuth(`/menus/${id}`);
+      const response = await apiService.fetchWithAuth(`/admin/menus/${id}/status`, {
+        method: 'PATCH',
+        body: JSON.stringify({ isActive })
+      });
       return response.data;
     } catch (error) {
-      console.error('Errore recupero menu per ID:', error);
-      throw new Error('Menu non trovato.');
+      console.error('Errore modifica stato menu:', error);
+      throw new Error('Errore nella modifica dello stato del menu.');
+    }
+  }
+
+  /**
+   * Duplica un menu esistente (solo admin)
+   */
+  async duplicateMenu(id) {
+    try {
+      const response = await apiService.fetchWithAuth(`/admin/menus/${id}/duplicate`, {
+        method: 'POST'
+      });
+      return response.data;
+    } catch (error) {
+      console.error('Errore duplicazione menu:', error);
+      throw new Error('Errore nella duplicazione del menu.');
     }
   }
 
@@ -255,6 +322,7 @@ class MenuService {
       description: '',
       menuType: 'DAILY',
       menuDate: new Date().toISOString().split('T')[0],
+      isActive: false,
       dishes: [
         // 3 Primi
         ...Array(3).fill(null).map((_, i) => ({
@@ -299,8 +367,22 @@ class MenuService {
       description: '',
       menuType: 'SEASONAL',
       menuDate: null,
+      isActive: false,
       dishes: []
     };
+  }
+
+  /**
+   * Statistiche menu (solo admin)
+   */
+  async getMenuStats() {
+    try {
+      const response = await apiService.fetchWithAuth('/admin/menus/stats');
+      return response.data;
+    } catch (error) {
+      console.error('Errore recupero statistiche menu:', error);
+      throw new Error('Impossibile recuperare le statistiche.');
+    }
   }
 }
 

@@ -1,20 +1,29 @@
-// ===================================================================
-// COMPONENTE PRINCIPALE MENU (per tutti gli utenti)
-// ===================================================================
-// src/components/Menu/MenuDisplay.jsx
+// =================================================================
+// SOSTITUZIONE COMPLETA per src/components/Menu/MenuDisplay.jsx
+// =================================================================
 
 import React, { useState, useEffect } from 'react';
-import { Container, Row, Col, Card, Badge, Spinner, Alert, Tabs, Tab } from 'react-bootstrap';
-import { motion, AnimatePresence } from 'framer-motion';
-import { FaUtensils, FaClock, FaLeaf } from 'react-icons/fa';
+import { Container, Row, Col, Card, Tab, Tabs, Badge, Spinner, Alert } from 'react-bootstrap';
+import { motion } from 'framer-motion';
+import { FaUtensils, FaClock, FaLeaf, FaCalendarAlt, FaEuroSign } from 'react-icons/fa';
 import menuService from '../../services/menuService';
+import { toast } from 'react-toastify';
 
+// ===================================================================
+// COMPONENTE PRINCIPALE DISPLAY MENU
+// ===================================================================
 const MenuDisplay = () => {
-  const [activeTab, setActiveTab] = useState('daily');
   const [dailyMenu, setDailyMenu] = useState(null);
   const [seasonalMenu, setSeasonalMenu] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [activeTab, setActiveTab] = useState('daily');
+  const [error, setError] = useState(null);
+
+  const cardVariants = {
+    initial: { opacity: 0, y: 30 },
+    animate: { opacity: 1, y: 0 },
+    transition: { duration: 0.6 }
+  };
 
   useEffect(() => {
     loadMenus();
@@ -23,62 +32,54 @@ const MenuDisplay = () => {
   const loadMenus = async () => {
     try {
       setLoading(true);
-      setError('');
+      setError(null);
+      
+      // Carica entrambi i menu in parallelo
+      const [dailyMenuData, seasonalMenuData] = await Promise.allSettled([
+        menuService.getTodaysDailyMenu(),
+        menuService.getCurrentSeasonalMenu()
+      ]);
 
-      // Carica menu del giorno
-      try {
-        const daily = await menuService.getTodaysDailyMenu();
-        setDailyMenu(daily);
-      } catch (err) {
-        console.log('Nessun menu del giorno disponibile');
+      // Gestisci il menu del giorno
+      if (dailyMenuData.status === 'fulfilled') {
+        setDailyMenu(dailyMenuData.value);
+      } else {
+        console.warn('Menu del giorno non disponibile:', dailyMenuData.reason);
       }
 
-      // Carica menu stagionale
-      try {
-        const seasonal = await menuService.getCurrentSeasonalMenu();
-        setSeasonalMenu(seasonal);
-      } catch (err) {
-        console.log('Nessun menu stagionale disponibile');
+      // Gestisci il menu stagionale  
+      if (seasonalMenuData.status === 'fulfilled') {
+        setSeasonalMenu(seasonalMenuData.value);
+      } else {
+        console.warn('Menu stagionale non disponibile:', seasonalMenuData.reason);
       }
 
       // Se nessun menu è disponibile
-      if (!dailyMenu && !seasonalMenu) {
-        setError('Nessun menu disponibile al momento.');
+      if (dailyMenuData.status === 'rejected' && seasonalMenuData.status === 'rejected') {
+        setError('Nessun menu disponibile al momento. Riprova più tardi.');
       }
 
-    } catch (err) {
-      console.error('Errore caricamento menu:', err);
+      // Imposta il tab di default basato sulla disponibilità
+      if (dailyMenuData.status === 'fulfilled') {
+        setActiveTab('daily');
+      } else if (seasonalMenuData.status === 'fulfilled') {
+        setActiveTab('seasonal');
+      }
+
+    } catch (error) {
+      console.error('Errore nel caricamento dei menu:', error);
       setError('Errore nel caricamento dei menu. Riprova più tardi.');
+      toast.error('Errore nel caricamento dei menu');
     } finally {
       setLoading(false);
     }
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        duration: 0.6,
-        staggerChildren: 0.1
-      }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 300 }
-    }
-  };
-
   if (loading) {
     return (
-      <Container className="py-5 text-center">
-        <Spinner animation="border" variant="primary" size="lg" />
-        <p className="mt-3">Caricamento menu...</p>
+      <Container className="text-center py-5">
+        <Spinner animation="border" role="status" variant="primary" />
+        <p className="mt-3 text-muted">Caricamento menu...</p>
       </Container>
     );
   }
@@ -87,9 +88,20 @@ const MenuDisplay = () => {
     return (
       <Container className="py-5">
         <Alert variant="warning" className="text-center">
-          <FaUtensils size={30} className="mb-2" />
-          <h5>Menu non disponibile</h5>
-          <p>{error}</p>
+          <FaUtensils size={48} className="mb-3" />
+          <h5>{error}</h5>
+        </Alert>
+      </Container>
+    );
+  }
+
+  if (!dailyMenu && !seasonalMenu) {
+    return (
+      <Container className="py-5">
+        <Alert variant="info" className="text-center">
+          <FaUtensils size={48} className="mb-3" />
+          <h5>Menu non ancora disponibili</h5>
+          <p>I nostri chef stanno preparando delle deliziose sorprese per voi!</p>
         </Alert>
       </Container>
     );
@@ -97,10 +109,10 @@ const MenuDisplay = () => {
 
   return (
     <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{ backgroundColor: '#F0EBDE', minHeight: '100vh', paddingTop: '2rem' }}
+      variants={cardVariants}
+      initial="initial"
+      animate="animate"
+      style={{ paddingTop: '2rem' }}
     >
       <Container>
         <motion.div variants={cardVariants} className="text-center mb-5">
@@ -170,6 +182,14 @@ const MenuCard = ({ menu, type }) => {
     return icons[category] || '🍽️';
   };
 
+  const getFixedPrice = () => {
+    if (type === 'daily') {
+      // Per menu del giorno, calcola un prezzo fisso o usa un prezzo prestabilito
+      return '25.00'; // Esempio di prezzo fisso
+    }
+    return null;
+  };
+
   return (
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
@@ -190,7 +210,7 @@ const MenuCard = ({ menu, type }) => {
                 {type === 'daily' ? (
                   <>
                     <FaClock className="me-1" />
-                    Oggi: {new Date(menu.menuDate).toLocaleDateString('it-IT')}
+                    Oggi
                   </>
                 ) : (
                   <>
@@ -199,37 +219,54 @@ const MenuCard = ({ menu, type }) => {
                   </>
                 )}
               </Badge>
+              {menu.menuDate && (
+                <div className="mt-1">
+                  <small className="opacity-75">
+                    <FaCalendarAlt className="me-1" />
+                    {new Date(menu.menuDate).toLocaleDateString('it-IT')}
+                  </small>
+                </div>
+              )}
             </Col>
           </Row>
         </Card.Header>
 
         <Card.Body className="p-0">
+          {type === 'daily' && getFixedPrice() && (
+            <div className={`bg-${type === 'daily' ? 'primary' : 'success'} bg-opacity-10 p-3 text-center border-bottom`}>
+              <h4 className="mb-0 text-primary">
+                <FaEuroSign className="me-2" />
+                Menu Completo: €{getFixedPrice()}
+              </h4>
+              <small className="text-muted">Include: primo, secondo e contorno</small>
+            </div>
+          )}
+
           {Object.entries(groupedDishes).map(([category, dishes]) => {
             if (dishes.length === 0) return null;
 
             return (
-              <motion.div
-                key={category}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.2 }}
-                className="border-bottom"
-              >
-                <div className="bg-light px-4 py-3">
-                  <h5 className="mb-0 text-primary">
-                    {getIconForCategory(category)} {categoryNames[category]}
+              <div key={category} className="border-bottom">
+                <div className={`bg-light p-3 border-start border-4 border-${type === 'daily' ? 'primary' : 'success'}`}>
+                  <h5 className="mb-0 text-dark">
+                    <span className="me-2">{getIconForCategory(category)}</span>
+                    {categoryNames[category]}
+                    <Badge bg="secondary" className="ms-2">
+                      {dishes.length}
+                    </Badge>
                   </h5>
                 </div>
-                <div className="px-4 py-3">
+
+                <div className="p-3">
                   <Row>
                     {dishes.map((dish, index) => (
-                      <Col key={dish.id} md={type === 'daily' ? 4 : 6} className="mb-3">
-                        <DishCard dish={dish} />
+                      <Col md={type === 'daily' ? 12 : 6} key={index} className="mb-3">
+                        <DishCard dish={dish} showPrice={type === 'seasonal'} />
                       </Col>
                     ))}
                   </Row>
                 </div>
-              </motion.div>
+              </div>
             );
           })}
         </Card.Body>
@@ -241,44 +278,52 @@ const MenuCard = ({ menu, type }) => {
 // ===================================================================
 // COMPONENTE SINGOLO PIATTO
 // ===================================================================
-const DishCard = ({ dish }) => {
+const DishCard = ({ dish, showPrice = true }) => {
   return (
     <motion.div
-      whileHover={{ scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 400 }}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="h-100"
     >
       <Card className="h-100 border-0 shadow-sm">
         <Card.Body className="p-3">
           <div className="d-flex justify-content-between align-items-start mb-2">
-            <h6 className="card-title text-primary mb-0 flex-grow-1">
+            <h6 className="card-title mb-0 text-primary fw-bold">
               {dish.name}
             </h6>
-            {dish.price && (
-              <Badge bg="secondary" className="ms-2">
-                {menuService.formatPrice(dish.price)}
+            {showPrice && dish.price && (
+              <Badge bg="outline-primary" className="ms-2">
+                €{parseFloat(dish.price).toFixed(2)}
               </Badge>
             )}
           </div>
-          
+
           {dish.description && (
             <p className="card-text text-muted small mb-2">
               {dish.description}
             </p>
           )}
-          
+
           {dish.ingredients && (
-            <p className="card-text">
+            <div className="mb-2">
               <small className="text-muted">
                 <strong>Ingredienti:</strong> {dish.ingredients}
               </small>
-            </p>
+            </div>
           )}
-          
-          {!dish.isAvailable && (
-            <Badge bg="warning" text="dark" className="mt-1">
-              Non disponibile
-            </Badge>
-          )}
+
+          <div className="d-flex align-items-center">
+            {dish.isAvailable ? (
+              <Badge bg="success" className="me-2">
+                <small>Disponibile</small>
+              </Badge>
+            ) : (
+              <Badge bg="secondary" className="me-2">
+                <small>Non disponibile</small>
+              </Badge>
+            )}
+          </div>
         </Card.Body>
       </Card>
     </motion.div>

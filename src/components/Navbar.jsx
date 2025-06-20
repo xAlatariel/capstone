@@ -1,4 +1,7 @@
-// src/components/Navbar.jsx
+// =================================================================
+// SOSTITUZIONE COMPLETA per src/components/Navbar.jsx
+// =================================================================
+
 import React, { useState } from "react";
 import {
   Navbar,
@@ -14,8 +17,6 @@ import { useAuth } from "../context/AuthContext";
 import Login from "./auth/Login";
 import Register from "./auth/Register";
 import { motion, AnimatePresence } from "framer-motion";
-import Menu from '../pages/Menu';
-
 
 const NavbarComponent = () => {
   const [showModal, setShowModal] = useState(false);
@@ -108,16 +109,17 @@ const NavbarComponent = () => {
                   </Nav.Link>
                 </motion.div>
               </div>
-             <div className="mx-2 position-relative">
-  <motion.div
-    whileHover={{ y: -2 }}
-    style={isActive("/menu") ? activeStyle : {}}
-  >
-    <Nav.Link as={Link} to="/menu">
-      Menu
-    </Nav.Link>
-  </motion.div>
-</div>
+              
+              <div className="mx-2 position-relative">
+                <motion.div
+                  whileHover={{ y: -2 }}
+                  style={isActive("/menu") ? activeStyle : {}}
+                >
+                  <Nav.Link as={Link} to="/menu">
+                    Menu
+                  </Nav.Link>
+                </motion.div>
+              </div>
 
               <div className="mx-2 position-relative">
                 <motion.div
@@ -141,44 +143,43 @@ const NavbarComponent = () => {
                 </motion.div>
               </div>
             </Nav>
+            
             <Nav>
               {token ? (
                 <>
                   {user?.role === "ADMIN" && (
-  <>
-    {/* Admin Panel */}
-    <div className="me-2 position-relative">
-      <motion.div
-        whileHover={{ y: -2 }}
-        style={isActive("/admin") ? activeStyle : {}}
-      >
-        <Nav.Link as={Link} to="/admin">
-          Admin Panel
-        </Nav.Link>
-      </motion.div>
-    </div>
+                    <>
+                      {/* Admin Panel */}
+                      <div className="me-2 position-relative">
+                        <motion.div
+                          whileHover={{ y: -2 }}
+                          style={isActive("/admin") ? activeStyle : {}}
+                        >
+                          <Nav.Link as={Link} to="/admin">
+                            Admin Panel
+                          </Nav.Link>
+                        </motion.div>
+                      </div>
 
-    {/* Gestione Menu */}
-    <div className="me-2 position-relative">
-      <motion.div
-        whileHover={{ y: -2 }}
-        style={isActive("/admin/menu") ? activeStyle : {}}
-      >
-        <Nav.Link as={Link} to="/admin/menu">
-          🍽️ Gestione Menu
-        </Nav.Link>
-      </motion.div>
-    </div>
-  </>
-)}
+                      {/* Gestione Menu - LINK CORRETTO */}
+                      <div className="me-2 position-relative">
+                        <motion.div
+                          whileHover={{ y: -2 }}
+                          style={isActive("/admin/menus") ? activeStyle : {}}
+                        >
+                          <Nav.Link as={Link} to="/admin/menus">
+                            🍽️ Gestione Menu
+                          </Nav.Link>
+                        </motion.div>
+                      </div>
+                    </>
+                  )}
 
                   {user?.role === "USER" && (
                     <div className="me-2 position-relative">
                       <motion.div
                         whileHover={{ y: -2 }}
-                        style={
-                          isActive("/user/reservations") ? activeStyle : {}
-                        }
+                        style={isActive("/user/reservations") ? activeStyle : {}}
                       >
                         <Nav.Link as={Link} to="/user/reservations">
                           Le Mie Prenotazioni
@@ -252,17 +253,6 @@ const NavbarComponent = () => {
                           prefillEmail={registrationEmail}
                           error={activeTab === "login" ? error : ""}
                         />
-                        <div className="mt-3 text-center d-flex align-items-center justify-content-center">
-                          Non hai un account?{" "}
-                          <motion.div whileHover={{ scale: 1.05 }}>
-                            <Button
-                              variant="link"
-                              onClick={() => setActiveTab("register")}
-                            >
-                              Registrati qui
-                            </Button>
-                          </motion.div>
-                        </div>
                       </motion.div>
                     </AnimatePresence>
                   </Tab>
@@ -276,19 +266,10 @@ const NavbarComponent = () => {
                         transition={{ duration: 0.2 }}
                       >
                         <Register
-                          onRegistrationSuccess={handleRegistrationSuccess}
+                          closeModal={handleCloseModal}
+                          onSuccess={handleRegistrationSuccess}
+                          error={activeTab === "register" ? error : ""}
                         />
-                        <div className="mt-3 text-center d-flex align-items-center justify-content-center">
-                          Hai già un account?{" "}
-                          <motion.div whileHover={{ scale: 1.05 }}>
-                            <Button
-                              variant="link"
-                              onClick={() => setActiveTab("login")}
-                            >
-                              Accedi qui
-                            </Button>
-                          </motion.div>
-                        </div>
                       </motion.div>
                     </AnimatePresence>
                   </Tab>

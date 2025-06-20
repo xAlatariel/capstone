@@ -1,4 +1,6 @@
+// =================================================================
 // SOSTITUZIONE COMPLETA per src/App.jsx
+// =================================================================
 
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -24,6 +26,10 @@ import ErrorBoundary from './components/common/ErrorBoundary';
 import Footer from './components/Footer';
 import MenuDisplay from './components/Menu/MenuDisplay';
 import MenuManagement from './components/Admin/MenuManagement';
+
+// REACT-TOASTIFY IMPORTS
+import 'react-toastify/dist/ReactToastify.css';
+import { ToastContainer } from 'react-toastify';
 
 function App() {
   return (
@@ -63,48 +69,65 @@ function App() {
                   <Route path='/contatti' element={<Contatti />} />
                   <Route path='/laNostraStoria' element={<LaNostraStoria />} />
                   
-                  {/* MENU DINAMICO - USA SOLO MenuDisplay */}
+                  {/* MENU DINAMICO */}
                   <Route path="/menu" element={<MenuDisplay />} />
                   
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/cookie-policy" element={<CookiePolicy />} />
                   <Route path="/ReservationPage" element={<ReservationPage />} />
-
-                  {/* ADMIN ROUTES */}
-                  <Route
-                    path="/admin"
-                    element={
-                      <ProtectedRoute requiredRole="ADMIN">
-                        <AdminPage />
-                      </ProtectedRoute>
-                    }
-                  /> 
                   
-                  <Route
-                    path="/admin/menu"
-                    element={
-                      <ProtectedRoute requiredRole="ADMIN">
-                        <MenuManagement />
-                      </ProtectedRoute>
-                    }
-                  />
-
-                  {/* USER ROUTES */}
-                  <Route
-                    path="/user/reservations"
-                    element={
-                      <ProtectedRoute>
-                        <UserReservationsPage />
-                      </ProtectedRoute>
-                    }
-                  />
+                  {/* ROTTE PROTETTE USER */}
+                  <Route path="/reservations" element={
+                    <ProtectedRoute>
+                      <ReservationPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/my-reservations" element={
+                    <ProtectedRoute>
+                      <UserReservationsPage />
+                    </ProtectedRoute>
+                  } />
+                  <Route path="/user/reservations" element={
+                    <ProtectedRoute>
+                      <UserReservationsPage />
+                    </ProtectedRoute>
+                  } />
                   
-                  {/* Fallback per pagine non trovate */}
+                  {/* ROTTE PROTETTE ADMIN */}
+                  <Route path="/admin" element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <AdminPage />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* GESTIONE MENU ADMIN - ROTTA CORRETTA */}
+                  <Route path="/admin/menus" element={
+                    <ProtectedRoute requiredRole="ADMIN">
+                      <MenuManagement />
+                    </ProtectedRoute>
+                  } />
+                  
+                  {/* 404 - Fallback per pagine non trovate */}
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </div>
               
               <Footer />
+              
+              {/* TOASTCONTAINER PER LE NOTIFICHE */}
+              <ToastContainer
+                position="top-right"
+                autoClose={5000}
+                hideProgressBar={false}
+                newestOnTop={false}
+                closeOnClick
+                rtl={false}
+                pauseOnFocusLoss
+                draggable
+                pauseOnHover
+                theme="light"
+                style={{ zIndex: 9999 }}
+              />
             </Router>
           </AuthProvider>
         </ToastProvider>
