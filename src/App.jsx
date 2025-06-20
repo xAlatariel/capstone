@@ -23,6 +23,8 @@ import CookiePolicy from './pages/CookiePolicy'; // NUOVO IMPORT
 import NotFoundPage from './pages/NotFoundPage';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Footer from './components/Footer'; // NUOVO IMPORT
+import MenuDisplay from './components/Menu/MenuDisplay';
+import MenuManagement from './components/Admin/MenuManagement';
 
 function App() {
   return (
@@ -67,7 +69,9 @@ function App() {
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} /> {/* PRIVACY POLICY */}
                   <Route path="/cookie-policy" element={<CookiePolicy />} /> {/* COOKIE POLICY */}
                   <Route path="/ReservationPage" element={<ReservationPage />} />
-                  
+                    <Route path="/menu" element={<MenuDisplay />} />
+
+
                   <Route
                     path="/admin"
                     element={
@@ -76,6 +80,15 @@ function App() {
                       </ProtectedRoute>
                     }
                   /> 
+                    <Route
+    path="/admin/menu"
+    element={
+      <ProtectedRoute requiredRole="ADMIN">
+        <MenuManagement />
+      </ProtectedRoute>
+    }
+  />
+
                   <Route
                     path="/user/reservations"
                     element={

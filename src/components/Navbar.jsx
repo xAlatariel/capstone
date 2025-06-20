@@ -108,16 +108,16 @@ const NavbarComponent = () => {
                   </Nav.Link>
                 </motion.div>
               </div>
-              <div className="mx-2 position-relative">
-                <motion.div
-                  whileHover={{ y: -2 }}
-                  style={isActive("/menu") ? activeStyle : {}}
-                >
-                  <Nav.Link as={Link} to="/menu">
-                    Menu
-                  </Nav.Link>
-                </motion.div>
-              </div>
+             <div className="mx-2 position-relative">
+  <motion.div
+    whileHover={{ y: -2 }}
+    style={isActive("/menu") ? activeStyle : {}}
+  >
+    <Nav.Link as={Link} to="/menu">
+      Menu
+    </Nav.Link>
+  </motion.div>
+</div>
 
               <div className="mx-2 position-relative">
                 <motion.div

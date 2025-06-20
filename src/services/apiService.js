@@ -132,6 +132,43 @@ class ApiService {
     });
   }
 
+
+  async getAllActiveMenus() {
+  return await this.fetchWithAuth('/menus/active');
+}
+
+async getTodaysDailyMenu() {
+  return await this.fetchWithAuth('/menus/daily/today');
+}
+
+async getCurrentSeasonalMenu() {
+  return await this.fetchWithAuth('/menus/seasonal/current');
+}
+
+// Admin methods
+async createMenu(menuData) {
+  return await this.fetchWithAuth('/menus', {
+    method: 'POST',
+    body: JSON.stringify(menuData)
+  });
+}
+
+async updateMenu(id, menuData) {
+  return await this.fetchWithAuth(`/menus/${id}`, {
+    method: 'PUT',
+    body: JSON.stringify(menuData)
+  });
+}
+
+async deleteMenu(id) {
+  return await this.fetchWithAuth(`/menus/${id}`, {
+    method: 'DELETE'
+  });
+}
+
+async getMenuById(id) {
+  return await this.fetchWithAuth(`/menus/${id}`);
+}
   // ===================================================================
   // PRENOTAZIONI
   // ===================================================================
@@ -209,5 +246,6 @@ class ApiService {
     }
   }
 }
+
 
 export default new ApiService();
