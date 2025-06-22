@@ -148,32 +148,28 @@ const NavbarComponent = () => {
               {token ? (
                 <>
                   {user?.role === "ADMIN" && (
-                    <>
-                      {/* Admin Panel */}
-                      <div className="me-2 position-relative">
-                        <motion.div
-                          whileHover={{ y: -2 }}
-                          style={isActive("/admin") ? activeStyle : {}}
-                        >
-                          <Nav.Link as={Link} to="/admin">
-                            Admin Panel
-                          </Nav.Link>
-                        </motion.div>
-                      </div>
-
-                      {/* Gestione Menu - LINK CORRETTO */}
-                      <div className="me-2 position-relative">
-                        <motion.div
-                          whileHover={{ y: -2 }}
-                          style={isActive("/admin/menus") ? activeStyle : {}}
-                        >
-                          <Nav.Link as={Link} to="/admin/menus">
-                            🍽️ Gestione Menu
-                          </Nav.Link>
-                        </motion.div>
-                      </div>
-                    </>
-                  )}
+  <div className="me-2 position-relative">
+    <motion.div
+      whileHover={{ y: -2 }}
+      style={isActive("/admin") ? activeStyle : {}}
+    >
+      <Nav.Link 
+        as={Link} 
+        to="/admin"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          height: '40px', // Stessa altezza degli altri link
+          padding: '8px 12px',
+          marginTop: '0px', // Rimuovi margin anomali
+          marginBottom: '0px'
+        }}
+      >
+        Admin Panel
+      </Nav.Link>
+    </motion.div>
+  </div>
+)}
 
                   {user?.role === "USER" && (
                     <div className="me-2 position-relative">

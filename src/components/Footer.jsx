@@ -10,26 +10,26 @@ const Footer = () => {
     <footer style={{ 
       backgroundColor: '#5D4037', 
       color: 'white', 
-      padding: '40px 0 20px 0',
-      marginTop: '50px'
+      padding: '25px 0 15px 0', // Ridotto da 40px 0 20px 0
+      marginTop: '30px' // Ridotto da 50px
     }}>
       <Container>
-        <Row>
+        <Row className="mb-3"> {/* Ridotto margine bottom */}
           {/* Info Ristorante */}
-          <Col md={4} className="mb-4">
-            <h5 className="mb-3">Ristorante Ai Canipai</h5>
-            <p className="mb-2">
-              <FaMapMarkerAlt className="me-2" />
+          <Col md={4} className="mb-3"> {/* Ridotto da mb-4 */}
+            <h6 className="mb-2 fw-bold">Ristorante Ai Canipai</h6> {/* h5 -> h6, mb-3 -> mb-2 */}
+            <p className="mb-1 small"> {/* Aggiunto 'small' per testo più piccolo */}
+              <FaMapMarkerAlt className="me-2" size={12} /> {/* Ridotto size icona */}
               Via Roma, 22 - San Romano in Garfagnana
             </p>
-            <p className="mb-2">
-              <FaPhone className="me-2" />
+            <p className="mb-1 small">
+              <FaPhone className="me-2" size={12} />
               <a href="tel:+390583179307" style={{ color: 'white', textDecoration: 'none' }}>
                 0583 179 9307
               </a>
             </p>
-            <p>
-              <FaEnvelope className="me-2" />
+            <p className="mb-0 small"> {/* mb-0 per eliminare margine finale */}
+              <FaEnvelope className="me-2" size={12} />
               <a href="mailto:info@aicanipai.it" style={{ color: 'white', textDecoration: 'none' }}>
                 info@aicanipai.it
               </a>
@@ -37,54 +37,68 @@ const Footer = () => {
           </Col>
 
           {/* Link Utili */}
-          <Col md={4} className="mb-4">
-            <h5 className="mb-3">Link Utili</h5>
-            <ul style={{ listStyle: 'none', padding: 0 }}>
-              <li className="mb-2">
-                <Link to="/menu" style={{ color: 'white', textDecoration: 'none' }}>Menu</Link>
+          <Col md={4} className="mb-3">
+            <h6 className="mb-2 fw-bold">Link Utili</h6>
+            <ul style={{ listStyle: 'none', padding: 0, marginBottom: 0 }}>
+              <li className="mb-1"> {/* Ridotto da mb-2 */}
+                <Link to="/menu" style={{ color: 'white', textDecoration: 'none', fontSize: '14px' }}>
+                  Menu
+                </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/ReservationPage" style={{ color: 'white', textDecoration: 'none' }}>Prenota un Tavolo</Link>
+              <li className="mb-1">
+                <Link to="/ReservationPage" style={{ color: 'white', textDecoration: 'none', fontSize: '14px' }}>
+                  Prenota un Tavolo
+                </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/chiSiamo" style={{ color: 'white', textDecoration: 'none' }}>Chi Siamo</Link>
+              <li className="mb-1">
+                <Link to="/chiSiamo" style={{ color: 'white', textDecoration: 'none', fontSize: '14px' }}>
+                  Chi Siamo
+                </Link>
               </li>
-              <li className="mb-2">
-                <Link to="/contatti" style={{ color: 'white', textDecoration: 'none' }}>Contatti</Link>
+              <li className="mb-0">
+                <Link to="/contatti" style={{ color: 'white', textDecoration: 'none', fontSize: '14px' }}>
+                  Contatti
+                </Link>
               </li>
             </ul>
           </Col>
 
-          {/* Orari e Social */}
-          <Col md={4} className="mb-4">
-            <h5 className="mb-3">Orari di Apertura</h5>
-            <p className="mb-1">Martedì - Domenica</p>
-            <p className="mb-1">12:00 - 15:00</p>
-            <p className="mb-3">19:00 - 23:00</p>
-            <p className="mb-2">Lunedì: Chiuso</p>
+          {/* Orari e Social - Compattato */}
+          <Col md={4} className="mb-3">
+            <h6 className="mb-2 fw-bold">Orari & Social</h6>
+            <div className="mb-2"> {/* Contenuto orari compattato */}
+              <p className="mb-0 small">Mar-Dom: 12:00-15:00 | 19:00-23:00</p>
+              <p className="mb-2 small">Lunedì: Chiuso</p>
+            </div>
             
-            <div className="mt-3">
+            {/* Social Media Icons */}
+            <div>
               <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" 
-                 style={{ color: 'white', fontSize: '24px', marginRight: '15px' }}>
+                 style={{ color: 'white', fontSize: '20px', marginRight: '12px' }}> {/* Ridotto size e margin */}
                 <FaFacebook />
               </a>
               <a href="https://instagram.com" target="_blank" rel="noopener noreferrer" 
-                 style={{ color: 'white', fontSize: '24px' }}>
+                 style={{ color: 'white', fontSize: '20px' }}>
                 <FaInstagram />
               </a>
             </div>
           </Col>
         </Row>
 
-        <hr style={{ borderColor: 'rgba(255,255,255,0.2)', margin: '30px 0 20px 0' }} />
+        {/* Separatore più sottile */}
+        <hr style={{ 
+          borderColor: 'rgba(255,255,255,0.2)', 
+          margin: '15px 0 10px 0', // Ridotto da 30px 0 20px 0
+          borderWidth: '1px'
+        }} />
 
-        {/* Copyright e Privacy */}
+        {/* Copyright e Privacy - Compattato */}
         <Row>
           <Col className="text-center">
-            <p className="mb-2" style={{ fontSize: '14px' }}>
+            <p className="mb-1" style={{ fontSize: '13px' }}> {/* Ridotto font e margin */}
               © {currentYear} Ristorante Ai Canipai - Tutti i diritti riservati
             </p>
-            <p style={{ fontSize: '14px' }}>
+            <p className="mb-0" style={{ fontSize: '13px' }}> {/* mb-0 per eliminare margine finale */}
               <Link to="/privacy-policy" style={{ color: 'white', textDecoration: 'none' }}>
                 Privacy Policy
               </Link>

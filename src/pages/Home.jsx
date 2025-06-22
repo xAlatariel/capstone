@@ -1,9 +1,13 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useInView } from 'react-intersection-observer';
+import { Modal, Button } from 'react-bootstrap';
+import { useLocation } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import { FaCalendarAlt, FaSwimmingPool, FaWheelchair, FaWifi, FaParking, FaGamepad, FaArrowRight } from 'react-icons/fa';
 import { Link } from 'react-router-dom';
+import Login from '../components/auth/Login';
+import Register from '../components/auth/Register';
 
 // Configurazione comune per animazioni
 const sectionVariants = {
@@ -137,12 +141,49 @@ const TextSection = ({ alignment, title, text, additionalText, actionText, actio
 
 // Componente principale
 const Home = () => {
+  // ===== STATI ORIGINALI =====
   // Refs per le sezioni
   const [ref1, inView1] = useInView({ triggerOnce: true, threshold: 0.2 });
   const [ref2, inView2] = useInView({ triggerOnce: true, threshold: 0.2 });
   const [ref3, inView3] = useInView({ triggerOnce: true, threshold: 0.2 });
   const [ref4, inView4] = useInView({ triggerOnce: true, threshold: 0.2 });
   const [refServices, inViewServices] = useInView({ triggerOnce: true, threshold: 0.2 });
+
+  // ===== NUOVI STATI PER I MODALI =====
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [modalMessage, setModalMessage] = useState("");
+  const location = useLocation();
+
+  // ===== USEEFFECT PER GESTIRE L'APERTURA AUTOMATICA =====
+  useEffect(() => {
+    if (location.state?.showLogin) {
+      setShowLoginModal(true);
+      if (location.state?.message) {
+        setModalMessage(location.state.message);
+      }
+    }
+  }, [location.state]);
+
+  // ===== FUNZIONI PER GESTIRE I MODALI =====
+  const handleOpenLogin = () => {
+    setShowRegisterModal(false);
+    setShowLoginModal(true);
+  };
+
+  const handleOpenRegister = () => {
+    setShowLoginModal(false);
+    setShowRegisterModal(true);
+  };
+
+  const handleCloseLogin = () => {
+    setShowLoginModal(false);
+    setModalMessage("");
+  };
+
+  const handleCloseRegister = () => {
+    setShowRegisterModal(false);
+  };
 
   // Servizi
   const services = [
@@ -271,6 +312,96 @@ const Home = () => {
           </div>
         </div>
       </motion.section>
+
+      {/* ===== MODALI AGGIUNTI ===== */}
+
+      {/* MODALE LOGIN */}
+      <Modal 
+        show={showLoginModal} 
+        onHide={handleCloseLogin}
+        centered
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton style={{ backgroundColor: '#F0EBDE', borderBottom: 'none' }}>
+          <Modal.Title style={{ color: '#5D4037', fontWeight: 'bold' }}>
+            🍽️ Accedi al tuo Account
+          </Modal.Title>
+        </Modal.Header>
+        
+        <Modal.Body style={{ backgroundColor: '#F0EBDE', padding: '2rem' }}>
+          {modalMessage && (
+            <div className="alert alert-success mb-3" role="alert">
+              {modalMessage}
+            </div>
+          )}
+          
+          <Login 
+            closeModal={handleCloseLogin}
+            prefillEmail={location.state?.email || ''}
+            error={location.state?.error || ''}
+          />
+          
+          <hr style={{ margin: '1.5rem 0', borderColor: '#8D6E63' }} />
+          
+          <div className="text-center">
+            <p style={{ color: '#5D4037', marginBottom: '0.5rem' }}>
+              Non hai ancora un account?
+            </p>
+            <Button 
+              variant="outline-primary" 
+              onClick={handleOpenRegister}
+              style={{ 
+                borderColor: '#5D4037',
+                color: '#5D4037',
+                fontWeight: '500'
+              }}
+            >
+              Registrati Ora
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
+      {/* MODALE REGISTRAZIONE */}
+      <Modal 
+        show={showRegisterModal} 
+        onHide={handleCloseRegister}
+        centered
+        size="lg"
+        backdrop="static"
+        keyboard={false}
+      >
+        <Modal.Header closeButton style={{ backgroundColor: '#F0EBDE', borderBottom: 'none' }}>
+          <Modal.Title style={{ color: '#5D4037', fontWeight: 'bold' }}>
+            🎉 Crea il tuo Account
+          </Modal.Title>
+        </Modal.Header>
+        
+        <Modal.Body style={{ backgroundColor: '#F0EBDE', padding: '2rem' }}>
+          <Register closeModal={handleCloseRegister} />
+          
+          <hr style={{ margin: '1.5rem 0', borderColor: '#8D6E63' }} />
+          
+          <div className="text-center">
+            <p style={{ color: '#5D4037', marginBottom: '0.5rem' }}>
+              Hai già un account?
+            </p>
+            <Button 
+              variant="outline-success" 
+              onClick={handleOpenLogin}
+              style={{ 
+                borderColor: '#5D4037',
+                color: '#5D4037',
+                fontWeight: '500'
+              }}
+            >
+              Accedi
+            </Button>
+          </div>
+        </Modal.Body>
+      </Modal>
+
     </div>
   );
 };
