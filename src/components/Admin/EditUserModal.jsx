@@ -1,7 +1,7 @@
 // src/components/Admin/EditUserModal.jsx
 import React, { useState, useEffect } from 'react';
 import { Modal, Form, Button, Alert, Row, Col, Spinner } from 'react-bootstrap';
-import { FaEdit, FaExclamationTriangle } from 'react-icons/fa';
+import { FaEdit, FaExclamationTriangle, FaInfoCircle } from 'react-icons/fa';
 import adminUserService from '../../services/adminUserService';
 
 const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
@@ -14,6 +14,7 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [validationErrors, setValidationErrors] = useState({});
 
   useEffect(() => {
     if (user) {
@@ -24,12 +25,39 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
         enabled: user.enabled || false,
         emailVerified: user.emailVerified || false
       });
+      setError('');
+      setValidationErrors({});
     }
   }, [user]);
+
+  const validateForm = () => {
+    const errors = {};
+    
+    if (!formData.name.trim()) {
+      errors.name = 'Il nome è obbligatorio';
+    }
+    
+    if (!formData.surname.trim()) {
+      errors.surname = 'Il cognome è obbligatorio';
+    }
+    
+    if (!formData.email.trim()) {
+      errors.email = 'L\'email è obbligatoria';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.email = 'Formato email non valido';
+    }
+    
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return;
+    
+    if (!validateForm()) {
+      return;
+    }
     
     try {
       setLoading(true);
@@ -51,16 +79,28 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
       ...prev,
       [name]: type === 'checkbox' ? checked : value
     }));
+    
+    // Rimuovi errore di validazione per il campo modificato
+    if (validationErrors[name]) {
+      setValidationErrors(prev => ({
+        ...prev,
+        [name]: undefined
+      }));
+    }
   };
 
-  if (!user) return null;
+  const handleClose = () => {
+    setError('');
+    setValidationErrors({});
+    onHide();
+  };
 
   return (
-    <Modal show={show} onHide={onHide} centered>
+    <Modal show={show} onHide={handleClose} centered>
       <Modal.Header closeButton>
         <Modal.Title>
           <FaEdit className="me-2" />
-          Modifica Utente
+          Modifica Utente: {user?.name} {user?.surname}
         </Modal.Title>
       </Modal.Header>
       <Form onSubmit={handleSubmit}>
@@ -72,6 +112,13 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
             </Alert>
           )}
           
+          <Alert variant="info">
+            <FaInfoCircle className="me-2" />
+            <strong>ID Utente:</strong> #{user?.id} | 
+            <strong> Ruolo:</strong> {user?.role} | 
+            <strong> Registrato:</strong> {user?.createdAt ? new Date(user.createdAt).toLocaleDateString('it-IT') : 'N/A'}
+          </Alert>
+          
           <Row>
             <Col md={6}>
               <Form.Group className="mb-3">
@@ -81,8 +128,12 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
                   name="name"
                   value={formData.name}
                   onChange={handleChange}
+                  isInvalid={!!validationErrors.name}
                   required
                 />
+                <Form.Control.Feedback type="invalid">
+                  {validationErrors.name}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
             <Col md={6}>
@@ -93,8 +144,12 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
                   name="surname"
                   value={formData.surname}
                   onChange={handleChange}
+                  isInvalid={!!validationErrors.surname}
                   required
                 />
+                <Form.Control.Feedback type="invalid">
+                  {validationErrors.surname}
+                </Form.Control.Feedback>
               </Form.Group>
             </Col>
           </Row>
@@ -106,45 +161,72 @@ const EditUserModal = ({ show, onHide, user, onUserUpdated }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
+              isInvalid={!!validationErrors.email}
               required
             />
-            {formData.email !== user.email && (
-              <Form.Text className="text-warning">
-                <FaExclamationTriangle className="me-1" />
-                Cambiando l'email, la verifica verrà resettata
-              </Form.Text>
-            )}
+            <Form.Control.Feedback type="invalid">
+              {validationErrors.email}
+            </Form.Control.Feedback>
+            <Form.Text className="text-muted">
+              Attenzione: modificare l'email richiederà una nuova verifica
+            </Form.Text>
           </Form.Group>
           
           <Row>
             <Col md={6}>
-              <Form.Check
-                type="checkbox"
-                name="enabled"
-                label="Account Attivo"
-                checked={formData.enabled}
-                onChange={handleChange}
-              />
+              <Form.Group className="mb-3">
+                <Form.Label>Stato Account</Form.Label>
+                <div className="mt-2">
+                  <Form.Check
+                    type="checkbox"
+                    name="enabled"
+                    id="enabled"
+                    label="Account attivo"
+                    checked={formData.enabled}
+                    onChange={handleChange}
+                  />
+                  <Form.Text className="text-muted">
+                    Disabilitare impedirà all'utente di accedere
+                  </Form.Text>
+                </div>
+              </Form.Group>
             </Col>
             <Col md={6}>
-              <Form.Check
-                type="checkbox"
-                name="emailVerified"
-                label="Email Verificata"
-                checked={formData.emailVerified}
-                onChange={handleChange}
-                disabled={formData.email !== user.email}
-              />
+              <Form.Group className="mb-3">
+                <Form.Label>Verifica Email</Form.Label>
+                <div className="mt-2">
+                  <Form.Check
+                    type="checkbox"
+                    name="emailVerified"
+                    id="emailVerified"
+                    label="Email verificata"
+                    checked={formData.emailVerified}
+                    onChange={handleChange}
+                  />
+                  <Form.Text className="text-muted">
+                    Forza la verifica dell'email dell'utente
+                  </Form.Text>
+                </div>
+              </Form.Group>
             </Col>
           </Row>
+          
+          {user?.role === 'ADMIN' && (
+            <Alert variant="warning">
+              <FaExclamationTriangle className="me-2" />
+              <strong>Attenzione:</strong> Stai modificando un account amministratore. 
+              Alcune modifiche potrebbero richiedere privilegi elevati.
+            </Alert>
+          )}
         </Modal.Body>
+        
         <Modal.Footer>
-          <Button variant="secondary" onClick={onHide}>
+          <Button variant="secondary" onClick={handleClose} disabled={loading}>
             Annulla
           </Button>
           <Button 
+            variant="primary" 
             type="submit" 
-            variant="primary"
             disabled={loading}
           >
             {loading ? (

@@ -93,307 +93,208 @@ const UserDetailModal = ({ show, onHide, user }) => {
           </>
         ) : (
           <>
-            <FaUsers className="me-1" />
-            Utente Standard
+            <FaUser className="me-1" />
+            Utente
           </>
         )}
       </Badge>
     );
   };
 
-  const getStatusBadge = (user) => {
-    if (!user.enabled) {
-      return (
-        <Badge bg="danger" className="fs-6">
-          <FaTimes className="me-1" />
-          Account Disabilitato
-        </Badge>
-      );
-    }
-    if (!user.emailVerified) {
-      return (
-        <Badge bg="warning" className="fs-6">
-          <FaEnvelope className="me-1" />
-          Email Non Verificata
-        </Badge>
-      );
-    }
+  const getStatusBadge = (enabled) => {
     return (
-      <Badge bg="success" className="fs-6">
-        <FaCheck className="me-1" />
-        Account Attivo
+      <Badge bg={enabled ? 'success' : 'danger'} className="fs-6">
+        {enabled ? (
+          <>
+            <FaCheck className="me-1" />
+            Attivo
+          </>
+        ) : (
+          <>
+            <FaTimes className="me-1" />
+            Disabilitato
+          </>
+        )}
       </Badge>
     );
   };
 
-  const getActivityTypeIcon = (activityType) => {
-    switch (activityType) {
-      case 'LOGIN':
-        return <FaCheck className="text-success" />;
-      case 'LOGOUT':
-        return <FaTimes className="text-muted" />;
-      case 'PASSWORD_CHANGED':
-        return <FaUserShield className="text-warning" />;
-      case 'EMAIL_VERIFIED':
-        return <FaEnvelope className="text-success" />;
-      case 'PROFILE_UPDATED':
-        return <FaUser className="text-info" />;
-      case 'RESERVATION_CREATED':
-        return <FaCalendarAlt className="text-primary" />;
-      case 'RESERVATION_CANCELLED':
-        return <FaTimes className="text-danger" />;
-      default:
-        return <FaClock className="text-muted" />;
-    }
-  };
-
-  const getActivityTypeLabel = (activityType) => {
-    const labels = {
-      'LOGIN': 'Accesso',
-      'LOGOUT': 'Disconnessione',
-      'PASSWORD_CHANGED': 'Password Cambiata',
-      'EMAIL_VERIFIED': 'Email Verificata',
-      'PROFILE_UPDATED': 'Profilo Aggiornato',
-      'RESERVATION_CREATED': 'Prenotazione Creata',
-      'RESERVATION_CANCELLED': 'Prenotazione Cancellata',
-      'USER_CREATED': 'Utente Creato',
-      'USER_UPDATED': 'Utente Aggiornato',
-      'USER_DELETED': 'Utente Eliminato',
-      'USER_STATUS_CHANGED': 'Stato Cambiato',
-      'ROLE_CHANGED': 'Ruolo Cambiato',
-      'PASSWORD_RESET': 'Password Resettata',
-      'VERIFICATION_EMAIL_SENT': 'Email Verifica Inviata',
-      'EMAIL_VERIFIED_BY_ADMIN': 'Email Verificata da Admin'
-    };
-    return labels[activityType] || activityType.replace(/_/g, ' ');
-  };
-
-  const calculateAccountAge = (createdAt) => {
-    const created = new Date(createdAt);
-    const now = new Date();
-    const diffTime = Math.abs(now - created);
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    
-    if (diffDays < 30) {
-      return `${diffDays} giorni`;
-    } else if (diffDays < 365) {
-      const months = Math.floor(diffDays / 30);
-      return `${months} mesi`;
-    } else {
-      const years = Math.floor(diffDays / 365);
-      const remainingMonths = Math.floor((diffDays % 365) / 30);
-      return `${years} anni${remainingMonths > 0 ? ` e ${remainingMonths} mesi` : ''}`;
-    }
+  const getEmailVerifiedBadge = (verified) => {
+    return (
+      <Badge bg={verified ? 'success' : 'warning'} className="fs-6">
+        {verified ? (
+          <>
+            <FaCheck className="me-1" />
+            Verificata
+          </>
+        ) : (
+          <>
+            <FaClock className="me-1" />
+            Non verificata
+          </>
+        )}
+      </Badge>
+    );
   };
 
   if (!user) return null;
 
   return (
-    <Modal show={show} onHide={onHide} size="xl" centered>
+    <Modal show={show} onHide={onHide} size="lg" centered>
       <Modal.Header closeButton>
         <Modal.Title>
           <FaEye className="me-2" />
-          Dettagli Utente - {user.name} {user.surname}
+          Dettagli Utente: {user.name} {user.surname}
         </Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      
+      <Modal.Body className="p-0">
         <Tabs
           activeKey={activeTab}
           onSelect={(k) => setActiveTab(k)}
-          className="mb-3"
+          className="mb-0"
+          fill
         >
           {/* TAB INFORMAZIONI GENERALI */}
           <Tab eventKey="info" title={<><FaUser className="me-2" />Informazioni</>}>
-            <Row>
-              <Col md={6}>
-                <Card className="h-100 border-0 shadow-sm">
-                  <Card.Header className="bg-primary text-white">
-                    <h6 className="mb-0">
-                      <FaUser className="me-2" />
-                      Informazioni Personali
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
+            <Card className="border-0 shadow-sm">
+              <Card.Header className="bg-primary text-white">
+                <h6 className="mb-0">
+                  <FaUser className="me-2" />
+                  Informazioni Personali
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={6}>
                     <div className="mb-3">
-                      <strong>
-                        <FaUser className="me-2 text-muted" />
-                        Nome Completo:
-                      </strong>
-                      <div className="mt-1">{user.name} {user.surname}</div>
+                      <strong className="text-muted">Nome Completo:</strong>
+                      <div className="mt-1">
+                        <FaUser className="text-primary me-2" />
+                        {user.name} {user.surname}
+                      </div>
                     </div>
                     
                     <div className="mb-3">
-                      <strong>
-                        <FaEnvelope className="me-2 text-muted" />
-                        Email:
-                      </strong>
-                      <div className="mt-1">{user.email}</div>
+                      <strong className="text-muted">Email:</strong>
+                      <div className="mt-1">
+                        <FaEnvelope className="text-primary me-2" />
+                        {user.email}
+                      </div>
                     </div>
                     
                     <div className="mb-3">
-                      <strong>
-                        <FaUserShield className="me-2 text-muted" />
-                        Ruolo:
-                      </strong>
-                      <div className="mt-2">
+                      <strong className="text-muted">Ruolo:</strong>
+                      <div className="mt-1">
                         {getRoleBadge(user.role)}
                       </div>
                     </div>
-                    
+                  </Col>
+                  
+                  <Col md={6}>
                     <div className="mb-3">
-                      <strong>
-                        <FaCheck className="me-2 text-muted" />
-                        Stato Account:
-                      </strong>
-                      <div className="mt-2">
-                        {getStatusBadge(user)}
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <strong>
-                        <FaEnvelope className="me-2 text-muted" />
-                        Verifica Email:
-                      </strong>
+                      <strong className="text-muted">Stato Account:</strong>
                       <div className="mt-1">
-                        {user.emailVerified ? (
-                          <span className="text-success">
-                            <FaCheck className="me-1" />
-                            Verificata
-                          </span>
-                        ) : (
-                          <span className="text-warning">
-                            <FaExclamationTriangle className="me-1" />
-                            Non Verificata
-                          </span>
-                        )}
+                        {getStatusBadge(user.enabled)}
                       </div>
                     </div>
-                  </Card.Body>
-                </Card>
-              </Col>
-              
-              <Col md={6}>
-                <Card className="h-100 border-0 shadow-sm">
-                  <Card.Header className="bg-info text-white">
-                    <h6 className="mb-0">
-                      <FaChartBar className="me-2" />
-                      Statistiche Account
-                    </h6>
-                  </Card.Header>
-                  <Card.Body>
-                    <div className="mb-3">
-                      <strong>
-                        <FaCalendarAlt className="me-2 text-muted" />
-                        Data Registrazione:
-                      </strong>
-                      <div className="mt-1">{formatDateOnly(user.createdAt)}</div>
-                    </div>
                     
                     <div className="mb-3">
-                      <strong>
-                        <FaClock className="me-2 text-muted" />
-                        Età Account:
-                      </strong>
-                      <div className="mt-1">{calculateAccountAge(user.createdAt)}</div>
-                    </div>
-                    
-                    <div className="mb-3">
-                      <strong>
-                        <FaClock className="me-2 text-muted" />
-                        Ultimo Accesso:
-                      </strong>
+                      <strong className="text-muted">Email Verificata:</strong>
                       <div className="mt-1">
-                        {user.lastLogin ? (
-                          formatDate(user.lastLogin)
-                        ) : (
-                          <span className="text-muted">
-                            <FaExclamationTriangle className="me-1" />
-                            Mai effettuato l'accesso
-                          </span>
-                        )}
+                        {getEmailVerifiedBadge(user.emailVerified)}
                       </div>
                     </div>
                     
                     <div className="mb-3">
-                      <strong>
-                        <FaCalendarAlt className="me-2 text-muted" />
-                        Prenotazioni Totali:
-                      </strong>
-                      <div className="mt-2">
-                        <Badge bg="info" className="fs-6">
-                          {user.reservationsCount} prenotazioni
-                        </Badge>
+                      <strong className="text-muted">Data Registrazione:</strong>
+                      <div className="mt-1">
+                        <FaCalendarAlt className="text-primary me-2" />
+                        {formatDate(user.createdAt)}
                       </div>
                     </div>
-
-                    {user.updatedAt && (
-                      <div className="mb-3">
-                        <strong>
-                          <FaClock className="me-2 text-muted" />
-                          Ultimo Aggiornamento:
-                        </strong>
-                        <div className="mt-1">{formatDate(user.updatedAt)}</div>
+                  </Col>
+                </Row>
+                
+                <hr />
+                
+                <Row>
+                  <Col md={6}>
+                    <div className="mb-3">
+                      <strong className="text-muted">Ultimo Accesso:</strong>
+                      <div className="mt-1">
+                        <FaClock className="text-warning me-2" />
+                        {formatDate(user.lastLoginAt)}
                       </div>
-                    )}
-                  </Card.Body>
-                </Card>
-              </Col>
-            </Row>
+                    </div>
+                  </Col>
+                  
+                  <Col md={6}>
+                    <div className="mb-3">
+                      <strong className="text-muted">Ultimo Aggiornamento:</strong>
+                      <div className="mt-1">
+                        <FaHistory className="text-info me-2" />
+                        {formatDate(user.updatedAt)}
+                      </div>
+                    </div>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
           </Tab>
 
           {/* TAB ATTIVITÀ */}
           <Tab eventKey="activities" title={<><FaHistory className="me-2" />Attività</>}>
             <Card className="border-0 shadow-sm">
-              <Card.Header className="bg-secondary text-white">
+              <Card.Header className="bg-info text-white">
                 <h6 className="mb-0">
                   <FaHistory className="me-2" />
-                  Attività Recenti ({activities.length})
+                  Cronologia Attività (Ultime 10)
                 </h6>
               </Card.Header>
-              <Card.Body className="p-0">
+              <Card.Body>
                 {loadingActivities ? (
-                  <div className="text-center py-5">
-                    <Spinner animation="border" variant="primary" />
-                    <div className="mt-2">Caricamento attività...</div>
+                  <div className="text-center py-4">
+                    <Spinner animation="border" role="status">
+                      <span className="visually-hidden">Caricamento...</span>
+                    </Spinner>
+                    <p className="mt-2 text-muted">Caricamento attività...</p>
                   </div>
                 ) : activitiesError ? (
-                  <Alert variant="danger" className="m-3">
+                  <Alert variant="danger">
                     <FaExclamationTriangle className="me-2" />
                     {activitiesError}
                   </Alert>
                 ) : activities.length === 0 ? (
-                  <div className="text-center py-5">
+                  <div className="text-center py-4">
                     <FaHistory size={50} className="text-muted mb-3" />
                     <p className="text-muted">Nessuna attività registrata</p>
                   </div>
                 ) : (
-                  <Table responsive hover className="mb-0">
-                    <thead className="bg-light">
+                  <Table responsive striped hover>
+                    <thead>
                       <tr>
-                        <th width="50px">Tipo</th>
-                        <th>Attività</th>
-                        <th>Descrizione</th>
-                        <th width="150px">Data/Ora</th>
-                        <th width="120px">Eseguita da</th>
+                        <th>Data</th>
+                        <th>Azione</th>
+                        <th>Dettagli</th>
+                        <th>Eseguita da</th>
                       </tr>
                     </thead>
                     <tbody>
                       {activities.map((activity, index) => (
                         <tr key={index}>
-                          <td className="text-center">
-                            {getActivityTypeIcon(activity.activityType)}
-                          </td>
-                          <td>
-                            <strong>{getActivityTypeLabel(activity.activityType)}</strong>
-                          </td>
                           <td>
                             <small className="text-muted">
-                              {activity.description || 'Nessuna descrizione'}
+                              {formatDate(activity.timestamp)}
                             </small>
                           </td>
                           <td>
-                            <small>{formatDate(activity.createdAt)}</small>
+                            <Badge bg="secondary">
+                              {activity.action}
+                            </Badge>
+                          </td>
+                          <td>
+                            <small>{activity.details || 'N/A'}</small>
                           </td>
                           <td>
                             <small>
@@ -438,6 +339,63 @@ const UserDetailModal = ({ show, onHide, user }) => {
                     Qui verranno mostrate tutte le prenotazioni dell'utente
                   </small>
                 </div>
+              </Card.Body>
+            </Card>
+          </Tab>
+
+          {/* TAB STATISTICHE */}
+          <Tab eventKey="stats" title={<><FaChartBar className="me-2" />Statistiche</>}>
+            <Card className="border-0 shadow-sm">
+              <Card.Header className="bg-warning text-dark">
+                <h6 className="mb-0">
+                  <FaChartBar className="me-2" />
+                  Statistiche Utente
+                </h6>
+              </Card.Header>
+              <Card.Body>
+                <Row>
+                  <Col md={6}>
+                    <Card className="mb-3 border-primary">
+                      <Card.Body className="text-center">
+                        <FaCalendarAlt size={30} className="text-primary mb-2" />
+                        <h5 className="mb-1">{user.totalReservations || 0}</h5>
+                        <small className="text-muted">Prenotazioni Totali</small>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  
+                  <Col md={6}>
+                    <Card className="mb-3 border-success">
+                      <Card.Body className="text-center">
+                        <FaClock size={30} className="text-success mb-2" />
+                        <h5 className="mb-1">{user.lastLoginDaysAgo || 'N/A'}</h5>
+                        <small className="text-muted">Giorni dall'ultimo accesso</small>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
+                
+                <Row>
+                  <Col md={6}>
+                    <Card className="mb-3 border-info">
+                      <Card.Body className="text-center">
+                        <FaEnvelope size={30} className="text-info mb-2" />
+                        <h5 className="mb-1">{user.emailsSent || 0}</h5>
+                        <small className="text-muted">Email inviate</small>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                  
+                  <Col md={6}>
+                    <Card className="mb-3 border-warning">
+                      <Card.Body className="text-center">
+                        <FaHistory size={30} className="text-warning mb-2" />
+                        <h5 className="mb-1">{activities.length}</h5>
+                        <small className="text-muted">Attività registrate</small>
+                      </Card.Body>
+                    </Card>
+                  </Col>
+                </Row>
               </Card.Body>
             </Card>
           </Tab>
