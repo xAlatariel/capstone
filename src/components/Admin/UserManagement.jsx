@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Container, 
   Card, 
@@ -14,7 +14,8 @@ import {
   InputGroup,
   Dropdown,
   OverlayTrigger,
-  Tooltip
+  Tooltip,
+  Pagination
 } from 'react-bootstrap';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -32,190 +33,111 @@ import {
   FaUserTimes,
   FaDownload,
   FaSyncAlt,
-  FaKey
+  FaKey,
+  FaChartBar,
+  FaExclamationTriangle,
+  FaCog
 } from 'react-icons/fa';
-
-// Simulazione service per gestione utenti
-const userService = {
-  async getAllUsers() {
-    // Simulazione API call
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve([
-          {
-            id: 1,
-            name: 'Mario Rossi',
-            email: 'mario.rossi@email.com',
-            role: 'USER',
-            enabled: true,
-            emailVerified: true,
-            createdAt: '2024-01-15',
-            lastLogin: '2024-06-20',
-            reservationsCount: 5
-          },
-          {
-            id: 2,
-            name: 'Giulia Bianchi',
-            email: 'giulia.bianchi@email.com',
-            role: 'USER',
-            enabled: true,
-            emailVerified: true,
-            createdAt: '2024-02-20',
-            lastLogin: '2024-06-19',
-            reservationsCount: 3
-          },
-          {
-            id: 3,
-            name: 'Admin User',
-            email: 'admin@aicanipai.it',
-            role: 'ADMIN',
-            enabled: true,
-            emailVerified: true,
-            createdAt: '2024-01-01',
-            lastLogin: '2024-06-22',
-            reservationsCount: 0
-          },
-          {
-            id: 4,
-            name: 'Luca Verdi',
-            email: 'luca.verdi@email.com',
-            role: 'USER',
-            enabled: false,
-            emailVerified: false,
-            createdAt: '2024-03-10',
-            lastLogin: null,
-            reservationsCount: 0
-          }
-        ]);
-      }, 1000);
-    });
-  },
-
-  async updateUserStatus(userId, enabled) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 500);
-    });
-  },
-
-  async updateUserRole(userId, role) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 500);
-    });
-  },
-
-  async deleteUser(userId) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 500);
-    });
-  },
-
-  async resendVerificationEmail(userId) {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve({ success: true }), 500);
-    });
-  }
-};
+import adminUserService from '../../services/adminUserService';
+import UserDetailModal from './UserDetailModal';
+import CreateUserModal from './CreateUserModal';
+import EditUserModal from './EditUserModal';
+import StatsModal from './StatsModal';
+import UserFilters from './UserFilters';
 
 const UserManagement = () => {
+  // ===================================================================
+  // STATI PRINCIPALI
+  // ===================================================================
+  
   const [users, setUsers] = useState([]);
-  const [filteredUsers, setFilteredUsers] = useState([]);
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
+  const [actionLoading, setActionLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+
+  // Stati per filtri e paginazione
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [emailVerifiedFilter, setEmailVerifiedFilter] = useState(null);
+  const [sortBy, setSortBy] = useState('createdAt');
+  const [sortDir, setSortDir] = useState('desc');
+  const [currentPage, setCurrentPage] = useState(0);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+
+  // Stati per modali
   const [selectedUser, setSelectedUser] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [actionLoading, setActionLoading] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
+  const [showStatsModal, setShowStatsModal] = useState(false);
 
-  // Stati per statistiche
-  const [stats, setStats] = useState({
-    total: 0,
-    active: 0,
-    inactive: 0,
-    verified: 0,
-    unverified: 0,
-    admins: 0,
-    users: 0
-  });
-
+  // ===================================================================
+  // EFFECTS
+  // ===================================================================
+  
   useEffect(() => {
     loadUsers();
-  }, []);
+    loadStats();
+  }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, emailVerifiedFilter, sortBy, sortDir]);
 
-  useEffect(() => {
-    filterUsers();
-    updateStats();
-  }, [users, searchTerm, roleFilter, statusFilter]);
-
-  const loadUsers = async () => {
+  const loadUsers = useCallback(async () => {
     try {
       setLoading(true);
       setError('');
-      const data = await userService.getAllUsers();
-      setUsers(data);
+      
+      const params = {
+        page: currentPage,
+        size: pageSize,
+        sortBy,
+        sortDir,
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter,
+        emailVerified: emailVerifiedFilter
+      };
+      
+      const response = await adminUserService.getAllUsers(params);
+      
+      setUsers(response.content || []);
+      setTotalPages(response.totalPages || 0);
+      setTotalElements(response.totalElements || 0);
+      
     } catch (err) {
       setError(err.message || 'Errore nel caricamento degli utenti');
     } finally {
       setLoading(false);
     }
+  }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, emailVerifiedFilter, sortBy, sortDir]);
+
+  const loadStats = async () => {
+    try {
+      const statsData = await adminUserService.getUserStats();
+      setStats(statsData);
+    } catch (err) {
+      console.error('Errore nel caricamento delle statistiche:', err);
+    }
   };
 
-  const filterUsers = () => {
-    let filtered = [...users];
-
-    // Filtro per termine di ricerca
-    if (searchTerm) {
-      filtered = filtered.filter(user =>
-        user.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtro per ruolo
-    if (roleFilter !== 'all') {
-      filtered = filtered.filter(user => 
-        user.role?.toLowerCase() === roleFilter.toLowerCase()
-      );
-    }
-
-    // Filtro per stato
-    if (statusFilter !== 'all') {
-      if (statusFilter === 'active') {
-        filtered = filtered.filter(user => user.enabled);
-      } else if (statusFilter === 'inactive') {
-        filtered = filtered.filter(user => !user.enabled);
-      } else if (statusFilter === 'verified') {
-        filtered = filtered.filter(user => user.emailVerified);
-      } else if (statusFilter === 'unverified') {
-        filtered = filtered.filter(user => !user.emailVerified);
-      }
-    }
-
-    setFilteredUsers(filtered);
-  };
-
-  const updateStats = () => {
-    const total = users.length;
-    const active = users.filter(u => u.enabled).length;
-    const inactive = users.filter(u => !u.enabled).length;
-    const verified = users.filter(u => u.emailVerified).length;
-    const unverified = users.filter(u => !u.emailVerified).length;
-    const admins = users.filter(u => u.role === 'ADMIN').length;
-    const usersCount = users.filter(u => u.role === 'USER').length;
-
-    setStats({ total, active, inactive, verified, unverified, admins, users: usersCount });
-  };
+  // ===================================================================
+  // HANDLERS PER AZIONI UTENTI
+  // ===================================================================
 
   const handleUserStatusChange = async (userId, enabled) => {
     try {
       setActionLoading(true);
-      await userService.updateUserStatus(userId, enabled);
+      await adminUserService.updateUserStatus(userId, enabled);
       setUsers(users.map(u => 
         u.id === userId ? { ...u, enabled } : u
       ));
+      setSuccess(`Utente ${enabled ? 'abilitato' : 'disabilitato'} con successo`);
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message || 'Errore nell\'aggiornamento dello stato utente');
     } finally {
@@ -226,10 +148,12 @@ const UserManagement = () => {
   const handleUserRoleChange = async (userId, role) => {
     try {
       setActionLoading(true);
-      await userService.updateUserRole(userId, role);
+      await adminUserService.updateUserRole(userId, role);
       setUsers(users.map(u => 
         u.id === userId ? { ...u, role } : u
       ));
+      setSuccess('Ruolo utente aggiornato con successo');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message || 'Errore nell\'aggiornamento del ruolo utente');
     } finally {
@@ -237,15 +161,37 @@ const UserManagement = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
+    
     try {
       setActionLoading(true);
-      await userService.deleteUser(userId);
-      setUsers(users.filter(u => u.id !== userId));
+      await adminUserService.deleteUser(selectedUser.id);
+      setUsers(users.filter(u => u.id !== selectedUser.id));
       setShowDeleteModal(false);
       setSelectedUser(null);
+      setSuccess('Utente eliminato con successo');
+      setTimeout(() => setSuccess(''), 3000);
+      loadStats();
     } catch (err) {
       setError(err.message || 'Errore nell\'eliminazione dell\'utente');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    if (!selectedUser) return;
+    
+    try {
+      setActionLoading(true);
+      const response = await adminUserService.resetUserPassword(selectedUser.id);
+      setShowPasswordResetModal(false);
+      setSelectedUser(null);
+      setSuccess(`Password resettata. Nuova password: ${response.temporaryPassword}`);
+      setTimeout(() => setSuccess(''), 10000);
+    } catch (err) {
+      setError(err.message || 'Errore nel reset della password');
     } finally {
       setActionLoading(false);
     }
@@ -254,8 +200,9 @@ const UserManagement = () => {
   const handleResendVerification = async (userId) => {
     try {
       setActionLoading(true);
-      await userService.resendVerificationEmail(userId);
-      alert('Email di verifica inviata con successo!');
+      await adminUserService.resendVerificationEmail(userId);
+      setSuccess('Email di verifica inviata con successo');
+      setTimeout(() => setSuccess(''), 3000);
     } catch (err) {
       setError(err.message || 'Errore nell\'invio dell\'email di verifica');
     } finally {
@@ -263,13 +210,129 @@ const UserManagement = () => {
     }
   };
 
+  const handleVerifyEmail = async (userId) => {
+    try {
+      setActionLoading(true);
+      await adminUserService.verifyUserEmail(userId);
+      setUsers(users.map(u => 
+        u.id === userId ? { ...u, emailVerified: true } : u
+      ));
+      setSuccess('Email verificata con successo');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Errore nella verifica email');
+    } finally {
+      setActionLoading(false);
+    }
+  };
+  const handleEmailVerifiedFilterChange = (emailVerified) => {
+  setEmailVerifiedFilter(emailVerified);
+  setCurrentPage(0);
+};
+
+const handleClearFilters = () => {
+  setSearchTerm('');
+  setRoleFilter('all');
+  setStatusFilter('all');
+  setEmailVerifiedFilter(null);
+  setCurrentPage(0);
+};
+
+const handlePageSizeChange = (size) => {
+  setPageSize(size);
+  setCurrentPage(0);
+};
+
+  // ===================================================================
+  // HANDLERS PER FILTRI E PAGINAZIONE
+  // ===================================================================
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+    setCurrentPage(0);
+  };
+
+  const handleRoleFilterChange = (role) => {
+    setRoleFilter(role);
+    setCurrentPage(0);
+  };
+
+  const handleStatusFilterChange = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(0);
+  };
+
+  const handleSort = (field) => {
+    if (sortBy === field) {
+      setSortDir(sortDir === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
+    }
+    setCurrentPage(0);
+  };
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
+  // ===================================================================
+  // HANDLERS PER EXPORT
+  // ===================================================================
+
+  const handleExportUsers = async () => {
+    try {
+      const exportData = await adminUserService.exportUsers({
+        search: searchTerm,
+        role: roleFilter,
+        status: statusFilter
+      });
+      
+      const headers = ['ID', 'Nome', 'Cognome', 'Email', 'Ruolo', 'Stato', 'Verificato', 'Registrazione', 'Ultimo Accesso', 'Prenotazioni'];
+      const csvContent = [
+        headers.join(','),
+        ...exportData.map(user => [
+          user.id,
+          user.name,
+          user.surname,
+          user.email,
+          user.role,
+          user.status,
+          user.emailVerified,
+          user.registrationDate,
+          user.lastLoginDate,
+          user.totalReservations
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', `utenti_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setSuccess('Export completato con successo');
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      setError(err.message || 'Errore nell\'export');
+    }
+  };
+
+  // ===================================================================
+  // UTILITY FUNCTIONS
+  // ===================================================================
+
   const getRoleBadge = (role) => {
     return (
       <Badge bg={role === 'ADMIN' ? 'danger' : 'primary'}>
         {role === 'ADMIN' ? (
           <>
             <FaUserShield className="me-1" size={10} />
-            Amministratore
+            Admin
           </>
         ) : (
           <>
@@ -291,672 +354,552 @@ const UserManagement = () => {
     return <Badge bg="success"><FaUserCheck className="me-1" size={10} />Attivo</Badge>;
   };
 
-  const exportToCSV = () => {
-    const headers = ['Nome', 'Email', 'Ruolo', 'Stato', 'Verificato', 'Registrato', 'Ultimo Accesso', 'Prenotazioni'];
-    const csvContent = [
-      headers.join(','),
-      ...filteredUsers.map(u => [
-        u.name,
-        u.email,
-        u.role,
-        u.enabled ? 'Attivo' : 'Disabilitato',
-        u.emailVerified ? 'Si' : 'No',
-        u.createdAt,
-        u.lastLogin || 'Mai',
-        u.reservationsCount
-      ].join(','))
-    ].join('\n');
-
-    const blob = new Blob([csvContent], { type: 'text/csv' });
-    const url = window.URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `utenti_${new Date().toISOString().split('T')[0]}.csv`;
-    a.click();
+  const formatDate = (dateString) => {
+    if (!dateString) return 'Mai';
+    return new Date(dateString).toLocaleDateString('it-IT', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
   };
 
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
-    }
-  };
-
-  const cardVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: {
-      y: 0,
-      opacity: 1,
-      transition: { type: 'spring', stiffness: 300 }
-    }
-  };
+  // ===================================================================
+  // RENDER
+  // ===================================================================
 
   return (
-    <motion.div
-      initial="hidden"
-      animate="visible"
-      variants={containerVariants}
-      style={{ backgroundColor: '#F0EBDE', minHeight: '100vh', paddingTop: '2rem' }}
-    >
-      <Container fluid>
-        {/* Header */}
-        <motion.div variants={cardVariants}>
-          <Card className="shadow-lg border-0 mb-4">
-            <Card.Header style={{ background: 'linear-gradient(135deg, #5D4037 0%, #8D6E63 100%)', color: 'white' }}>
-              <Row className="align-items-center">
-                <Col>
-                  <h3 className="mb-0 fw-bold">
-                    <FaUsers className="me-2" />
-                    Gestione Utenti
-                  </h3>
-                </Col>
-                <Col xs="auto">
-                  <div className="d-flex gap-2">
-                    <Button 
-                      variant="light" 
-                      size="sm" 
-                      onClick={loadUsers}
-                      disabled={loading}
-                    >
-                      <FaSyncAlt className={loading ? 'fa-spin' : ''} />
-                    </Button>
-                    <Button 
-                      variant="success" 
-                      size="sm" 
-                      onClick={exportToCSV}
-                      disabled={filteredUsers.length === 0}
-                    >
-                      <FaDownload className="me-1" />
-                      Esporta CSV
-                    </Button>
-                    <Button 
-                      variant="primary" 
-                      size="sm"
-                      onClick={() => alert('Funzionalità di creazione utente in sviluppo')}
-                    >
-                      <FaUserPlus className="me-1" />
-                      Nuovo Utente
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
-            </Card.Header>
-          </Card>
-        </motion.div>
+    <Container fluid className="py-4">
+      <AnimatePresence>
+        {error && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Alert variant="danger" dismissible onClose={() => setError('')}>
+              <FaExclamationTriangle className="me-2" />
+              {error}
+            </Alert>
+          </motion.div>
+        )}
+        
+        {success && (
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -20 }}
+          >
+            <Alert variant="success" dismissible onClose={() => setSuccess('')}>
+              <FaUserCheck className="me-2" />
+              {success}
+            </Alert>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Statistiche */}
-        <motion.div variants={cardVariants}>
-          <Row className="mb-4">
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #2196F3 0%, #42A5F5 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaUsers size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.total}</h4>
-                  <small>Totale Utenti</small>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #4CAF50 0%, #66BB6A 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaUserCheck size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.active}</h4>
-                  <small>Attivi</small>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #F44336 0%, #EF5350 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaUserTimes size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.inactive}</h4>
-                  <small>Disabilitati</small>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #FF9800 0%, #FFB74D 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaEnvelope size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.verified}</h4>
-                  <small>Verificati</small>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #9C27B0 0%, #BA68C8 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaUserShield size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.admins}</h4>
-                  <small>Amministratori</small>
-                </Card.Body>
-              </Card>
-            </Col>
-            <Col md={2} className="mb-3">
-              <Card className="text-center h-100 border-0 shadow-sm" style={{ background: 'linear-gradient(135deg, #00BCD4 0%, #26C6DA 100%)', color: 'white' }}>
-                <Card.Body className="py-3">
-                  <FaUsers size={24} className="mb-2" />
-                  <h4 className="fw-bold mb-1">{stats.users}</h4>
-                  <small>Utenti Standard</small>
-                </Card.Body>
-              </Card>
-            </Col>
-          </Row>
-        </motion.div>
+      {/* Header con statistiche */}
+      <Row className="mb-4">
+        <Col>
+          <div className="d-flex justify-content-between align-items-center">
+            <div>
+              <h2 className="text-success mb-0">
+                <FaUsers className="me-2" />
+                Gestione Utenti
+              </h2>
+              <p className="text-muted">Amministrazione completa degli utenti del sistema</p>
+            </div>
+            <div className="d-flex gap-2">
+              <Button
+                variant="outline-primary"
+                onClick={() => setShowStatsModal(true)}
+              >
+                <FaChartBar className="me-2" />
+                Statistiche
+              </Button>
+              <Button
+                variant="outline-success"
+                onClick={handleExportUsers}
+              >
+                <FaDownload className="me-2" />
+                Esporta
+              </Button>
+              <Button
+                variant="success"
+                onClick={() => setShowCreateModal(true)}
+              >
+                <FaUserPlus className="me-2" />
+                Nuovo Utente
+              </Button>
+            </div>
+          </div>
+        </Col>
+      </Row>
 
-        {/* Filtri */}
-        <motion.div variants={cardVariants}>
-          <Card className="shadow-sm border-0 mb-4">
+      {/* Statistiche rapide */}
+      <Row className="mb-4">
+        <Col md={3}>
+          <Card className="text-center border-0 shadow-sm">
             <Card.Body>
-              <Row className="align-items-end">
-                <Col md={4} className="mb-2">
-                  <Form.Group>
-                    <Form.Label className="small fw-bold">Cerca Utente</Form.Label>
-                    <InputGroup>
-                      <InputGroup.Text>
-                        <FaSearch />
-                      </InputGroup.Text>
-                      <Form.Control
-                        type="text"
-                        placeholder="Nome o email..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </InputGroup>
-                  </Form.Group>
-                </Col>
-                <Col md={2} className="mb-2">
-                  <Form.Group>
-                    <Form.Label className="small fw-bold">Ruolo</Form.Label>
-                    <Form.Select
-                      value={roleFilter}
-                      onChange={(e) => setRoleFilter(e.target.value)}
-                    >
-                      <option value="all">Tutti</option>
-                      <option value="admin">Amministratori</option>
-                      <option value="user">Utenti</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={2} className="mb-2">
-                  <Form.Group>
-                    <Form.Label className="small fw-bold">Stato</Form.Label>
-                    <Form.Select
-                      value={statusFilter}
-                      onChange={(e) => setStatusFilter(e.target.value)}
-                    >
-                      <option value="all">Tutti</option>
-                      <option value="active">Attivi</option>
-                      <option value="inactive">Disabilitati</option>
-                      <option value="verified">Verificati</option>
-                      <option value="unverified">Non Verificati</option>
-                    </Form.Select>
-                  </Form.Group>
-                </Col>
-                <Col md={4} className="mb-2">
-                  <div className="d-flex gap-2">
-                    <Button 
-                      variant="outline-secondary" 
-                      onClick={() => {
-                        setSearchTerm('');
-                        setRoleFilter('all');
-                        setStatusFilter('all');
-                      }}
-                    >
-                      <FaFilter className="me-1" />
-                      Reset Filtri
-                    </Button>
-                  </div>
-                </Col>
-              </Row>
+              <h3 className="text-primary">{stats.totalUsers || 0}</h3>
+              <small className="text-muted">Totale Utenti</small>
             </Card.Body>
           </Card>
-        </motion.div>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center border-0 shadow-sm">
+            <Card.Body>
+              <h3 className="text-success">{stats.activeUsers || 0}</h3>
+              <small className="text-muted">Utenti Attivi</small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center border-0 shadow-sm">
+            <Card.Body>
+              <h3 className="text-warning">{stats.unverifiedUsers || 0}</h3>
+              <small className="text-muted">Non Verificati</small>
+            </Card.Body>
+          </Card>
+        </Col>
+        <Col md={3}>
+          <Card className="text-center border-0 shadow-sm">
+            <Card.Body>
+              <h3 className="text-info">{stats.weekRegistrations || 0}</h3>
+              <small className="text-muted">Nuovi Questa Settimana</small>
+            </Card.Body>
+          </Card>
+        </Col>
+      </Row>
 
-        {/* Tabella Utenti */}
-        <motion.div variants={cardVariants}>
-          <Card className="shadow-lg border-0">
-            <Card.Header style={{ backgroundColor: '#8D6E63', color: 'white' }}>
-              <h5 className="mb-0 fw-bold">
-                Utenti Registrati ({filteredUsers.length})
-              </h5>
-            </Card.Header>
-            <Card.Body className="p-0">
-              {error && (
-                <Alert variant="danger" className="m-3">
-                  <strong>Errore:</strong> {error}
-                  <Button 
-                    variant="outline-danger" 
-                    size="sm" 
-                    className="ms-2"
-                    onClick={() => setError('')}
+      {/* Filtri e ricerca */}
+<UserFilters
+  searchTerm={searchTerm}
+  roleFilter={roleFilter}
+  statusFilter={statusFilter}
+  emailVerifiedFilter={emailVerifiedFilter}
+  pageSize={pageSize}
+  loading={loading}
+  totalElements={totalElements}
+  onSearchChange={handleSearch}
+  onRoleFilterChange={handleRoleFilterChange}
+  onStatusFilterChange={handleStatusFilterChange}
+  onEmailVerifiedFilterChange={handleEmailVerifiedFilterChange}
+  onPageSizeChange={handlePageSizeChange}
+  onRefresh={loadUsers}
+  onExport={handleExportUsers}
+  onClearFilters={handleClearFilters}
+/>
+
+
+      {/* Tabella utenti */}
+      <Card className="shadow-sm">
+        <Card.Header>
+          <div className="d-flex justify-content-between align-items-center">
+            <h5 className="mb-0">
+              <FaUsers className="me-2" />
+              Lista Utenti ({totalElements})
+            </h5>
+          </div>
+        </Card.Header>
+        <Card.Body className="p-0">
+          {loading ? (
+            <div className="text-center py-5">
+              <Spinner animation="border" variant="success" />
+              <div className="mt-2">Caricamento utenti...</div>
+            </div>
+          ) : users.length === 0 ? (
+            <div className="text-center py-5">
+              <FaUsers size={50} className="text-muted mb-3" />
+              <p className="text-muted">Nessun utente trovato</p>
+            </div>
+          ) : (
+            <Table responsive hover className="mb-0">
+              <thead className="bg-light">
+                <tr>
+                  <th 
+                    className="cursor-pointer user-select-none"
+                    onClick={() => handleSort('id')}
                   >
-                    ✕
-                  </Button>
-                </Alert>
-              )}
-
-              {loading ? (
-                <div className="text-center py-5">
-                  <Spinner animation="border" variant="primary" size="lg" />
-                  <p className="mt-3">Caricamento utenti...</p>
-                </div>
-              ) : filteredUsers.length === 0 ? (
-                <div className="text-center py-5">
-                  <FaUsers size={64} className="text-muted mb-3" />
-                  <h5>Nessun utente trovato</h5>
-                  <p className="text-muted">
-                    {searchTerm || roleFilter !== 'all' || statusFilter !== 'all' 
-                      ? 'Prova a modificare i filtri di ricerca' 
-                      : 'Non ci sono utenti registrati al momento'
-                    }
-                  </p>
-                </div>
-              ) : (
-                <div className="table-responsive">
-                  <Table hover className="mb-0">
-                    <thead style={{ backgroundColor: '#F5F5F5' }}>
-                      <tr>
-                        <th>Utente</th>
-                        <th>Email</th>
-                        <th>Ruolo</th>
-                        <th>Stato</th>
-                        <th>Registrato</th>
-                        <th>Ultimo Accesso</th>
-                        <th>Prenotazioni</th>
-                        <th>Azioni</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <AnimatePresence>
-                        {filteredUsers.map((user) => (
-                          <motion.tr
-                            key={user.id}
-                            variants={cardVariants}
-                            initial="hidden"
-                            animate="visible"
-                            exit="hidden"
-                            whileHover={{ backgroundColor: '#F8F9FA' }}
+                    ID {sortBy === 'id' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="cursor-pointer user-select-none"
+                    onClick={() => handleSort('name')}
+                  >
+                    Nome {sortBy === 'name' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th 
+                    className="cursor-pointer user-select-none"
+                    onClick={() => handleSort('email')}
+                  >
+                    Email {sortBy === 'email' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th>Ruolo</th>
+                  <th>Stato</th>
+                  <th 
+                    className="cursor-pointer user-select-none"
+                    onClick={() => handleSort('createdAt')}
+                  >
+                    Registrazione {sortBy === 'createdAt' && (sortDir === 'asc' ? '↑' : '↓')}
+                  </th>
+                  <th>Ultimo Accesso</th>
+                  <th>Prenotazioni</th>
+                  <th className="text-center">Azioni</th>
+                </tr>
+              </thead>
+              <tbody>
+                {users.map((user) => (
+                  <motion.tr
+                    key={user.id}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <td>#{user.id}</td>
+                    <td>
+                      <div>
+                        <strong>{user.name} {user.surname}</strong>
+                      </div>
+                    </td>
+                    <td>
+                      <div>{user.email}</div>
+                      {!user.emailVerified && (
+                        <small className="text-warning">
+                          <FaEnvelope className="me-1" />
+                          Non verificata
+                        </small>
+                      )}
+                    </td>
+                    <td>{getRoleBadge(user.role)}</td>
+                    <td>{getStatusBadge(user)}</td>
+                    <td>
+                      <small>{formatDate(user.createdAt)}</small>
+                    </td>
+                    <td>
+                      <small>{formatDate(user.lastLogin)}</small>
+                    </td>
+                    <td>
+                      <Badge bg="info">{user.reservationsCount}</Badge>
+                    </td>
+                    <td>
+                      <div className="d-flex gap-1 justify-content-center">
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={<Tooltip>Visualizza dettagli</Tooltip>}
+                        >
+                          <Button
+                            variant="outline-primary"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowDetailModal(true);
+                            }}
                           >
-                            <td>
-                              <div className="fw-bold">{user.name}</div>
-                              <small className="text-muted">ID: {user.id}</small>
-                            </td>
-                            <td>
-                              <div>{user.email}</div>
-                              {!user.emailVerified && (
-                                <small className="text-warning">⚠️ Non verificata</small>
-                              )}
-                            </td>
-                            <td>
-                              <Dropdown>
-                                <Dropdown.Toggle 
-                                  variant="link" 
-                                  className="p-0 border-0"
-                                  style={{ textDecoration: 'none' }}
+                            <FaEye />
+                          </Button>
+                        </OverlayTrigger>
+
+                        <OverlayTrigger
+                          placement="top"
+                          overlay={<Tooltip>Modifica utente</Tooltip>}
+                        >
+                          <Button
+                            variant="outline-secondary"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowEditModal(true);
+                            }}
+                          >
+                            <FaEdit />
+                          </Button>
+                        </OverlayTrigger>
+
+                        <Dropdown>
+                          <Dropdown.Toggle
+                            variant="outline-success"
+                            size="sm"
+                            id={`dropdown-${user.id}`}
+                          >
+                            <FaCog />
+                          </Dropdown.Toggle>
+                          <Dropdown.Menu>
+                            <Dropdown.Header>Stato Utente</Dropdown.Header>
+                            <Dropdown.Item
+                              onClick={() => handleUserStatusChange(user.id, !user.enabled)}
+                              disabled={actionLoading}
+                            >
+                              <FaUserCheck className="me-2" />
+                              {user.enabled ? 'Disabilita' : 'Abilita'}
+                            </Dropdown.Item>
+                            
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Ruolo</Dropdown.Header>
+                            {user.role === 'USER' ? (
+                              <Dropdown.Item
+                                onClick={() => handleUserRoleChange(user.id, 'ADMIN')}
+                                disabled={actionLoading}
+                              >
+                                <FaUserShield className="me-2" />
+                                Promuovi ad Admin
+                              </Dropdown.Item>
+                            ) : (
+                              <Dropdown.Item
+                                onClick={() => handleUserRoleChange(user.id, 'USER')}
+                                disabled={actionLoading}
+                              >
+                                <FaUsers className="me-2" />
+                                Rimuovi Admin
+                              </Dropdown.Item>
+                            )}
+                            
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Email</Dropdown.Header>
+                            {!user.emailVerified && (
+                              <>
+                                <Dropdown.Item
+                                  onClick={() => handleVerifyEmail(user.id)}
                                   disabled={actionLoading}
                                 >
-                                  {getRoleBadge(user.role)}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item 
-                                    onClick={() => handleUserRoleChange(user.id, 'USER')}
-                                    disabled={user.role === 'USER' || actionLoading}
-                                  >
-                                    <FaUsers className="me-2" />
-                                    Utente Standard
-                                  </Dropdown.Item>
-                                  <Dropdown.Item 
-                                    onClick={() => handleUserRoleChange(user.id, 'ADMIN')}
-                                    disabled={user.role === 'ADMIN' || actionLoading}
-                                  >
-                                    <FaUserShield className="me-2" />
-                                    Amministratore
-                                  </Dropdown.Item>
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                            <td>
-                              <Dropdown>
-                                <Dropdown.Toggle 
-                                  variant="link" 
-                                  className="p-0 border-0"
-                                  style={{ textDecoration: 'none' }}
+                                  <FaUserCheck className="me-2" />
+                                  Verifica Email
+                                </Dropdown.Item>
+                                <Dropdown.Item
+                                  onClick={() => handleResendVerification(user.id)}
                                   disabled={actionLoading}
                                 >
-                                  {getStatusBadge(user)}
-                                </Dropdown.Toggle>
-                                <Dropdown.Menu>
-                                  <Dropdown.Item 
-                                    onClick={() => handleUserStatusChange(user.id, true)}
-                                    disabled={user.enabled || actionLoading}
-                                  >
-                                    <FaUserCheck className="me-2" />
-                                    Abilita Utente
-                                  </Dropdown.Item>
-                                  <Dropdown.Item 
-                                    onClick={() => handleUserStatusChange(user.id, false)}
-                                    disabled={!user.enabled || actionLoading}
-                                  >
-                                    <FaUserTimes className="me-2" />
-                                    Disabilita Utente
-                                  </Dropdown.Item>
-                                  {!user.emailVerified && (
-                                    <>
-                                      <Dropdown.Divider />
-                                      <Dropdown.Item 
-                                        onClick={() => handleResendVerification(user.id)}
-                                        disabled={actionLoading}
-                                      >
-                                        <FaEnvelope className="me-2" />
-                                        Reinvia Verifica Email
-                                      </Dropdown.Item>
-                                    </>
-                                  )}
-                                </Dropdown.Menu>
-                              </Dropdown>
-                            </td>
-                            <td>
-                              <div>
-                                <FaCalendarAlt className="me-1 text-muted" size={12} />
-                                <small>{user.createdAt}</small>
-                              </div>
-                            </td>
-                            <td>
-                              {user.lastLogin ? (
-                                <small>{user.lastLogin}</small>
-                              ) : (
-                                <small className="text-muted">Mai</small>
-                              )}
-                            </td>
-                            <td>
-                              <Badge bg="secondary" className="px-2 py-1">
-                                {user.reservationsCount}
-                              </Badge>
-                            </td>
-                            <td>
-                              <div className="d-flex gap-1">
-                                <OverlayTrigger
-                                  placement="top"
-                                  overlay={<Tooltip>Visualizza dettagli</Tooltip>}
-                                >
-                                  <Button
-                                    variant="outline-primary"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setShowDetailModal(true);
-                                    }}
-                                  >
-                                    <FaEye size={12} />
-                                  </Button>
-                                </OverlayTrigger>
-                                <OverlayTrigger
-                                  placement="top"
-                                  overlay={<Tooltip>Modifica utente</Tooltip>}
-                                >
-                                  <Button
-                                    variant="outline-warning"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setShowEditModal(true);
-                                    }}
-                                  >
-                                    <FaEdit size={12} />
-                                  </Button>
-                                </OverlayTrigger>
-                                <OverlayTrigger
-                                  placement="top"
-                                  overlay={<Tooltip>Elimina utente</Tooltip>}
-                                >
-                                  <Button
-                                    variant="outline-danger"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedUser(user);
-                                      setShowDeleteModal(true);
-                                    }}
-                                    disabled={user.role === 'ADMIN'}
-                                  >
-                                    <FaTrash size={12} />
-                                  </Button>
-                                </OverlayTrigger>
-                              </div>
-                            </td>
-                          </motion.tr>
-                        ))}
-                      </AnimatePresence>
-                    </tbody>
-                  </Table>
-                </div>
-              )}
-            </Card.Body>
-          </Card>
-        </motion.div>
-
-        {/* Modal Dettagli Utente */}
-        <Modal 
-          show={showDetailModal} 
-          onHide={() => setShowDetailModal(false)} 
-          centered
-          size="lg"
-        >
-          <Modal.Header closeButton style={{ backgroundColor: '#8D6E63', color: 'white' }}>
-            <Modal.Title>
-              <FaEye className="me-2" />
-              Dettagli Utente
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body style={{ backgroundColor: '#F9F9F9' }}>
-            {selectedUser && (
-              <Container>
-                <Row className="mb-3">
-                  <Col md={6}>
-                    <Card className="h-100 border-0 shadow-sm">
-                      <Card.Header className="bg-primary text-white">
-                        <FaUsers className="me-2" />
-                        Informazioni Personali
-                      </Card.Header>
-                      <Card.Body>
-                        <p><strong>Nome:</strong> {selectedUser.name}</p>
-                        <p><strong>Email:</strong> {selectedUser.email}</p>
-                        <p><strong>ID Utente:</strong> {selectedUser.id}</p>
-                        <p><strong>Ruolo:</strong> {getRoleBadge(selectedUser.role)}</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                  <Col md={6}>
-                    <Card className="h-100 border-0 shadow-sm">
-                      <Card.Header className="bg-success text-white">
-                        <FaCalendarAlt className="me-2" />
-                        Stato Account
-                      </Card.Header>
-                      <Card.Body>
-                        <p><strong>Stato:</strong> {getStatusBadge(selectedUser)}</p>
-                        <p><strong>Email Verificata:</strong> {selectedUser.emailVerified ? '✅ Sì' : '❌ No'}</p>
-                        <p><strong>Account Abilitato:</strong> {selectedUser.enabled ? '✅ Sì' : '❌ No'}</p>
-                        <p><strong>Registrato il:</strong> {selectedUser.createdAt}</p>
-                        <p><strong>Ultimo Accesso:</strong> {selectedUser.lastLogin || 'Mai'}</p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-                <Row>
-                  <Col>
-                    <Card className="border-0 shadow-sm">
-                      <Card.Header className="bg-warning text-dark">
-                        <FaCalendarAlt className="me-2" />
-                        Statistiche Attività
-                      </Card.Header>
-                      <Card.Body>
-                        <p><strong>Numero Prenotazioni:</strong> {selectedUser.reservationsCount}</p>
-                        <p className="mb-0"><strong>Stato Generale:</strong> 
-                          {selectedUser.enabled && selectedUser.emailVerified ? (
-                            <span className="text-success ms-2">Account Attivo e Funzionale</span>
-                          ) : (
-                            <span className="text-warning ms-2">Account con Limitazioni</span>
-                          )}
-                        </p>
-                      </Card.Body>
-                    </Card>
-                  </Col>
-                </Row>
-              </Container>
-            )}
-          </Modal.Body>
-          <Modal.Footer style={{ backgroundColor: '#F9F9F9' }}>
-            <Button variant="secondary" onClick={() => setShowDetailModal(false)}>
-              Chiudi
-            </Button>
-            <Button 
-              variant="warning" 
-              onClick={() => {
-                setShowDetailModal(false);
-                setShowEditModal(true);
-              }}
-            >
-              <FaEdit className="me-2" />
-              Modifica
-            </Button>
-          </Modal.Footer>
-        </Modal>
-
-        {/* Modal Modifica Utente */}
-        <Modal 
-          show={showEditModal} 
-          onHide={() => setShowEditModal(false)} 
-          centered
-        >
-          <Modal.Header closeButton style={{ backgroundColor: '#FF9800', color: 'white' }}>
-            <Modal.Title>
-              <FaEdit className="me-2" />
-              Modifica Utente
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {selectedUser && (
-              <div>
-                <Alert variant="info">
-                  <strong>Funzionalità in Sviluppo</strong><br />
-                  Le modifiche avanzate dell'utente saranno disponibili nella prossima versione.
-                </Alert>
-                <div className="bg-light p-3 rounded">
-                  <h6>Azioni Rapide Disponibili:</h6>
-                  <div className="d-grid gap-2">
-                    <Button 
-                      variant={selectedUser.enabled ? 'danger' : 'success'}
-                      onClick={() => {
-                        handleUserStatusChange(selectedUser.id, !selectedUser.enabled);
-                        setShowEditModal(false);
-                      }}
-                      disabled={actionLoading}
+                                  <FaEnvelope className="me-2" />
+                                  Reinvia Verifica
+                                </Dropdown.Item>
+                              </>
+                            )}
+                            
+                            <Dropdown.Divider />
+                            <Dropdown.Header>Sicurezza</Dropdown.Header>
+                            <Dropdown.Item
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowPasswordResetModal(true);
+                              }}
+                              disabled={actionLoading}
+                            >
+                              <FaKey className="me-2" />
+                              Reset Password
+                            </Dropdown.Item>
+                            
+                            <Dropdown.Divider />
+                            <Dropdown.Item
+                              className="text-danger"
+                              onClick={() => {
+                                setSelectedUser(user);
+                                setShowDeleteModal(true);
+                              }}
+                              disabled={actionLoading}
+                            >
+                              <FaTrash className="me-2" />
+                              Elimina Utente
+                            </Dropdown.Item>
+                          </Dropdown.Menu>
+                        </Dropdown>
+                      </div>
+                    </td>
+                  </motion.tr>
+                ))}
+              </tbody>
+            </Table>
+          )}
+        </Card.Body>
+        
+        {/* Paginazione */}
+        {totalPages > 1 && (
+          <Card.Footer>
+            <div className="d-flex justify-content-between align-items-center">
+              <small className="text-muted">
+                Mostrando {currentPage * pageSize + 1}-{Math.min((currentPage + 1) * pageSize, totalElements)} di {totalElements} utenti
+              </small>
+              <Pagination size="sm" className="mb-0">
+                <Pagination.First 
+                  onClick={() => handlePageChange(0)}
+                  disabled={currentPage === 0}
+                />
+                <Pagination.Prev 
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 0}
+                />
+                
+                {[...Array(Math.min(5, totalPages))].map((_, index) => {
+                  const pageNum = currentPage < 3 ? index : 
+                                 currentPage > totalPages - 3 ? totalPages - 5 + index :
+                                 currentPage - 2 + index;
+                  
+                  if (pageNum < 0 || pageNum >= totalPages) return null;
+                  
+                  return (
+                    <Pagination.Item
+                      key={pageNum}
+                      active={pageNum === currentPage}
+                      onClick={() => handlePageChange(pageNum)}
                     >
-                      {selectedUser.enabled ? 'Disabilita Account' : 'Abilita Account'}
-                    </Button>
-                    <Button 
-                      variant={selectedUser.role === 'ADMIN' ? 'warning' : 'danger'}
-                      onClick={() => {
-                        const newRole = selectedUser.role === 'ADMIN' ? 'USER' : 'ADMIN';
-                        handleUserRoleChange(selectedUser.id, newRole);
-                        setShowEditModal(false);
-                      }}
-                      disabled={actionLoading}
-                    >
-                      {selectedUser.role === 'ADMIN' ? 'Rimuovi Privilegi Admin' : 'Rendi Amministratore'}
-                    </Button>
-                    {!selectedUser.emailVerified && (
-                      <Button 
-                        variant="info"
-                        onClick={() => {
-                          handleResendVerification(selectedUser.id);
-                          setShowEditModal(false);
-                        }}
-                        disabled={actionLoading}
-                      >
-                        <FaEnvelope className="me-2" />
-                        Reinvia Email di Verifica
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowEditModal(false)}>
-              Annulla
-            </Button>
-          </Modal.Footer>
-        </Modal>
+                      {pageNum + 1}
+                    </Pagination.Item>
+                  );
+                })}
+                
+                <Pagination.Next 
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages - 1}
+                />
+                <Pagination.Last 
+                  onClick={() => handlePageChange(totalPages - 1)}
+                  disabled={currentPage === totalPages - 1}
+                />
+              </Pagination>
+            </div>
+          </Card.Footer>
+        )}
+      </Card>
 
-        {/* Modal Conferma Eliminazione */}
-        <Modal 
-          show={showDeleteModal} 
-          onHide={() => setShowDeleteModal(false)} 
-          centered
-        >
-          <Modal.Header closeButton className="bg-danger text-white">
-            <Modal.Title>
-              <FaTrash className="me-2" />
-              Conferma Eliminazione Utente
-            </Modal.Title>
-          </Modal.Header>
-          <Modal.Body>
-            {selectedUser && (
-              <div>
-                <Alert variant="danger">
-                  <strong>⚠️ ATTENZIONE!</strong> Questa azione è irreversibile e comporterà:
-                  <ul className="mt-2 mb-0">
-                    <li>Eliminazione permanente dell'account utente</li>
-                    <li>Perdita di tutte le prenotazioni associate</li>
-                    <li>Impossibilità di recuperare i dati</li>
-                  </ul>
-                </Alert>
-                <p>Sei sicuro di voler eliminare definitivamente l'utente:</p>
-                <div className="bg-light p-3 rounded">
-                  <strong>{selectedUser.name}</strong><br />
-                  {selectedUser.email}<br />
-                  Ruolo: {selectedUser.role}<br />
-                  Prenotazioni: {selectedUser.reservationsCount}
-                </div>
-                <Form.Group className="mt-3">
-                  <Form.Label className="fw-bold">
-                    Per confermare, digita "ELIMINA" qui sotto:
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Digita ELIMINA per confermare"
-                    onChange={(e) => {
-                      const confirmButton = document.getElementById('confirm-delete-btn');
-                      if (confirmButton) {
-                        confirmButton.disabled = e.target.value !== 'ELIMINA';
-                      }
-                    }}
-                  />
-                </Form.Group>
+      {/* MODALI */}
+      
+      {/* Modal Dettagli Utente */}
+      <UserDetailModal
+        show={showDetailModal}
+        onHide={() => setShowDetailModal(false)}
+        user={selectedUser}
+      />
+
+      {/* Modal Creazione Utente */}
+      <CreateUserModal
+        show={showCreateModal}
+        onHide={() => setShowCreateModal(false)}
+        onUserCreated={(newUser) => {
+          setUsers([newUser, ...users]);
+          loadStats();
+          setSuccess('Utente creato con successo');
+          setTimeout(() => setSuccess(''), 3000);
+        }}
+      />
+
+      {/* Modal Modifica Utente */}
+      <EditUserModal
+        show={showEditModal}
+        onHide={() => setShowEditModal(false)}
+        user={selectedUser}
+        onUserUpdated={(updatedUser) => {
+          setUsers(users.map(u => u.id === updatedUser.id ? updatedUser : u));
+          setSuccess('Utente aggiornato con successo');
+          setTimeout(() => setSuccess(''), 3000);
+        }}
+      />
+
+      {/* Modal Conferma Eliminazione */}
+      <Modal show={showDeleteModal} onHide={() => setShowDeleteModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="text-danger">
+            <FaExclamationTriangle className="me-2" />
+            Conferma Eliminazione
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUser && (
+            <div>
+              <p>Sei sicuro di voler eliminare l'utente:</p>
+              <div className="bg-light p-3 rounded">
+                <strong>{selectedUser.name} {selectedUser.surname}</strong>
+                <br />
+                <small className="text-muted">{selectedUser.email}</small>
               </div>
+              <Alert variant="warning" className="mt-3">
+                <FaExclamationTriangle className="me-2" />
+                <strong>Attenzione:</strong> Questa azione non può essere annullata. 
+                L'utente verrà disabilitato e i suoi dati rimarranno nel sistema per scopi di audit.
+              </Alert>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
+            Annulla
+          </Button>
+          <Button 
+            variant="danger" 
+            onClick={handleDeleteUser}
+            disabled={actionLoading}
+          >
+            {actionLoading ? (
+              <>
+                <Spinner size="sm" className="me-2" />
+                Eliminazione...
+              </>
+            ) : (
+              <>
+                <FaTrash className="me-2" />
+                Elimina Utente
+              </>
             )}
-          </Modal.Body>
-          <Modal.Footer>
-            <Button variant="secondary" onClick={() => setShowDeleteModal(false)}>
-              Annulla
-            </Button>
-            <Button 
-              id="confirm-delete-btn"
-              variant="danger" 
-              onClick={() => handleDeleteUser(selectedUser?.id)}
-              disabled={true}
-            >
-              <FaTrash className="me-2" />
-              {actionLoading ? 'Eliminazione...' : 'Elimina Definitivamente'}
-            </Button>
-          </Modal.Footer>
-        </Modal>
-      </Container>
-    </motion.div>
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal Reset Password */}
+      <Modal show={showPasswordResetModal} onHide={() => setShowPasswordResetModal(false)} centered>
+        <Modal.Header closeButton>
+          <Modal.Title className="text-warning">
+            <FaKey className="me-2" />
+            Reset Password
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {selectedUser && (
+            <div>
+              <p>Stai per resettare la password per:</p>
+              <div className="bg-light p-3 rounded">
+                <strong>{selectedUser.name} {selectedUser.surname}</strong>
+                <br />
+                <small className="text-muted">{selectedUser.email}</small>
+              </div>
+              <Alert variant="info" className="mt-3">
+                <FaKey className="me-2" />
+                Verrà generata una password temporanea che sarà inviata via email all'utente.
+                L'utente dovrà cambiarla al primo accesso.
+              </Alert>
+            </div>
+          )}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={() => setShowPasswordResetModal(false)}>
+            Annulla
+          </Button>
+          <Button 
+            variant="warning" 
+            onClick={handlePasswordReset}
+            disabled={actionLoading}
+          >
+            {actionLoading ? (
+              <>
+                <Spinner size="sm" className="me-2" />
+                Reset in corso...
+              </>
+            ) : (
+              <>
+                <FaKey className="me-2" />
+                Reset Password
+              </>
+            )}
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* Modal Statistiche */}
+      <StatsModal
+        show={showStatsModal}
+        onHide={() => setShowStatsModal(false)}
+        stats={stats}
+      />
+    </Container>
   );
 };
 
-export default UserManagement;
+export default UserManagement;// src/components/Admin/UserManagement.jsx
