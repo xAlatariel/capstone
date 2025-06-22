@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
+
 import {
   fetchAllReservations,
-  deleteReservation,
+  deleteReservation,  
   getReservationsByDate,
 } from "../services/reservationService";
 import { useAuth } from "../context/AuthContext";
@@ -134,6 +135,7 @@ const AdminPanel = () => {
   };
 
   return (
+    
     <motion.div
       initial="hidden"
       animate="visible"
@@ -209,8 +211,8 @@ const AdminPanel = () => {
         </motion.div>
 
         {/* Azioni Amministrative Migliorate */}
-        // Nel tuo file src/components/AdminPanel.jsx
-// Trova la sezione "Azioni Amministrative" e sostituisci TUTTA questa parte:
+       
+      
 
 {/* Azioni Amministrative */}
 <motion.div variants={cardVariants}>
@@ -236,44 +238,33 @@ const AdminPanel = () => {
         </Col>
         
         <Col md={6} lg={4} className="mb-3">
-          <div className="position-relative">
-            <Button
-              variant="primary"
-              size="lg"
-              className="w-100 d-flex align-items-center justify-content-center"
-              onClick={() => alert('Funzionalità in sviluppo')}
-              style={{ opacity: 0.7 }}
-            >
-              <FaCalendarAlt className="me-2" />
-              Gestione Prenotazioni
-            </Button>
-            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-warning text-dark">
-              Presto
-            </span>
-          </div>
+          <Button
+            variant="primary"
+            size="lg"
+            className="w-100 d-flex align-items-center justify-content-center"
+            onClick={() => navigate('/admin/reservations')}
+          >
+            <FaCalendarAlt className="me-2" />
+            Gestione Prenotazioni
+          </Button>
         </Col>
         
         <Col md={6} lg={4} className="mb-3">
-          <div className="position-relative">
-            <Button
-              variant="warning"
-              size="lg"
-              className="w-100 d-flex align-items-center justify-content-center"
-              onClick={() => alert('Funzionalità in sviluppo')}
-              style={{ opacity: 0.7, color: 'white' }}
-            >
-              <FaUsers className="me-2" />
-              Gestione Utenti
-            </Button>
-            <span className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-info">
-              Presto
-            </span>
-          </div>
+          <Button
+            variant="info"
+            size="lg"
+            className="w-100 d-flex align-items-center justify-content-center"
+            onClick={() => navigate('/admin/users')}
+          >
+            <FaUsers className="me-2" />
+            Gestione Utenti
+          </Button>
         </Col>
       </Row>
     </Card.Body>
   </Card>
 </motion.div>
+
 
         {/* Sezione Prenotazioni */}
         <motion.div variants={cardVariants}>

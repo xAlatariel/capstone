@@ -1,4 +1,6 @@
 // src/services/adminUserService.js
+// SOSTITUISCI COMPLETAMENTE IL FILE CON QUESTO CODICE
+
 import apiService from './apiService';
 
 class AdminUserService {
@@ -8,18 +10,34 @@ class AdminUserService {
   // ===================================================================
   
   async getAllUsers(params = {}) {
-    const queryParams = new URLSearchParams();
-    
-    if (params.page !== undefined) queryParams.append('page', params.page);
-    if (params.size !== undefined) queryParams.append('size', params.size);
-    if (params.sortBy) queryParams.append('sortBy', params.sortBy);
-    if (params.sortDir) queryParams.append('sortDir', params.sortDir);
-    if (params.search) queryParams.append('search', params.search);
-    if (params.role && params.role !== 'all') queryParams.append('role', params.role);
-    if (params.status && params.status !== 'all') queryParams.append('status', params.status);
-    if (params.emailVerified !== undefined) queryParams.append('emailVerified', params.emailVerified);
-    
-    return await apiService.fetchWithAuth(`/admin/users?${queryParams.toString()}`);
+    try {
+      const queryParams = new URLSearchParams();
+      
+      // Aggiungi solo parametri validi
+      if (params.page !== undefined) queryParams.append('page', params.page);
+      if (params.size !== undefined) queryParams.append('size', params.size);
+      if (params.sortBy) queryParams.append('sortBy', params.sortBy);
+      if (params.sortDir) queryParams.append('sortDir', params.sortDir);
+      if (params.search && params.search.trim()) queryParams.append('search', params.search);
+      if (params.role && params.role !== 'all') queryParams.append('role', params.role);
+      if (params.status && params.status !== 'all') queryParams.append('status', params.status);
+      
+      // FIX CRITICO: emailVerified solo se è boolean
+      if (typeof params.emailVerified === 'boolean') {
+        queryParams.append('emailVerified', params.emailVerified);
+      }
+      
+      const endpoint = `/admin/users?${queryParams.toString()}`;
+      console.log('🌐 AdminUserService chiamata:', endpoint);
+      
+      const response = await apiService.fetchWithAuth(endpoint);
+      console.log('✅ AdminUserService risposta:', response);
+      
+      return response;
+    } catch (error) {
+      console.error('❌ AdminUserService errore:', error);
+      throw error;
+    }
   }
   
   async getUserById(id) {

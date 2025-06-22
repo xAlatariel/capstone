@@ -88,42 +88,42 @@ const UserManagement = () => {
   }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, emailVerifiedFilter, sortBy, sortDir]);
 
   const loadUsers = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError('');
-      
-      const params = {
-        page: currentPage,
-        size: pageSize,
-        sortBy,
-        sortDir,
-        search: searchTerm,
-        role: roleFilter,
-        status: statusFilter,
-        emailVerified: emailVerifiedFilter
-      };
-      
-      const response = await adminUserService.getAllUsers(params);
-      
-      setUsers(response.content || []);
-      setTotalPages(response.totalPages || 0);
-      setTotalElements(response.totalElements || 0);
-      
-    } catch (err) {
-      setError(err.message || 'Errore nel caricamento degli utenti');
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, emailVerifiedFilter, sortBy, sortDir]);
-
-  const loadStats = async () => {
-    try {
-      const statsData = await adminUserService.getUserStats();
-      setStats(statsData);
-    } catch (err) {
-      console.error('Errore nel caricamento delle statistiche:', err);
-    }
-  };
+  try {
+    setLoading(true);
+    setError('');
+    
+    const params = {
+      page: currentPage,
+      size: pageSize,
+      sortBy,
+      sortDir,
+      search: searchTerm,
+      role: roleFilter,
+      status: statusFilter,
+      emailVerified: emailVerifiedFilter
+    };
+    
+    console.log('🔍 UserManagement - Parametri per loadUsers:', params);
+    
+    const response = await adminUserService.getAllUsers(params);
+    console.log('📊 UserManagement - Risposta getAllUsers:', response);
+    
+    // VERIFICA STRUTTURA DATI
+    console.log('📋 UserManagement - response.content:', response.content);
+    console.log('📏 UserManagement - response.totalElements:', response.totalElements);
+    console.log('📄 UserManagement - response.totalPages:', response.totalPages);
+    
+    setUsers(response.content || []);
+    setTotalPages(response.totalPages || 0);
+    setTotalElements(response.totalElements || 0);
+    
+  } catch (err) {
+    console.error('❌ UserManagement - Errore in loadUsers:', err);
+    setError(err.message || 'Errore nel caricamento degli utenti');
+  } finally {
+    setLoading(false);
+  }
+}, [currentPage, pageSize, searchTerm, roleFilter, statusFilter, emailVerifiedFilter, sortBy, sortDir]);
 
   // ===================================================================
   // HANDLERS PER AZIONI UTENTI
